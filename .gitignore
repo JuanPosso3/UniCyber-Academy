@@ -42,3 +42,12 @@ coverage/
 *.njsproj
 *.sln
 *.sw?
+
+# Prisma AI agent skills
+backend/.agents/
+backend/.claude/
+backend/.cursor/
+backend/.devin/
+
+# Prisma local AI documentation
+backend/prisma-8.md
