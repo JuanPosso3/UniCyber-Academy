@@ -1,0 +1,17 @@
+{
+  "name": "unicyber",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@12.4.2",
+  "scripts": {
+    "dev": "pnpm --filter backend dev",
+    "dev:web": "pnpm --filter unicyber-web dev",
+    "typecheck": "pnpm --filter backend typecheck",
+    "typecheck:web": "pnpm --filter unicyber-web typecheck",
+    "typecheck:all": "pnpm typecheck && pnpm typecheck:web",
+    "build": "pnpm --filter backend build",
+    "build:web": "pnpm --filter unicyber-web build",
+    "build:all": "pnpm build && pnpm build:web",
+    "start": "pnpm --filter backend start"
+  }
+}

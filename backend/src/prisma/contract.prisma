@@ -1,0 +1,182 @@
+
+ // use prisma-8
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMINISTRATIVE
+  VISITOR
+  MENTOR
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum ContentStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum LessonType {
+  THEORY
+  LABORATORY
+}
+
+enum AssessmentType {
+  MODULE
+  COURSE_FINAL
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String     @unique
+  passwordHash String
+  role      UserRole
+  status    UserStatus @default(ACTIVE)
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  lessonProgress     LessonProgress[]
+  assessmentAttempts AssessmentAttempt[]
+}
+
+model Course {
+  id          Int           @id @default(autoincrement())
+  title       String
+  description String?
+  status      ContentStatus @default(DRAFT)
+  createdAt   TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  modules     Module[]
+  assessment Assessment? @relation("CourseFinalAssessment")
+}
+
+model Module {
+  id          Int           @id @default(autoincrement())
+  courseId    Int
+  title       String
+  description String?
+  order       Int
+  status      ContentStatus @default(DRAFT)
+  createdAt   TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  course     Course      @relation(fields: [courseId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  lessons    Lesson[]
+  assessment Assessment? @relation("ModuleAssessment")
+
+  @@unique([courseId, order])
+}
+
+model Lesson {
+  id        Int           @id @default(autoincrement())
+  moduleId  Int
+  title     String
+  content   Json
+  type      LessonType
+  order     Int
+  status    ContentStatus @default(DRAFT)
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  module   Module           @relation(fields: [moduleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  progress LessonProgress[]
+
+  @@unique([moduleId, order])
+}
+
+model Assessment {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String?
+  type        AssessmentType
+  moduleId    Int?           @unique
+  courseId    Int?           @unique
+  status      ContentStatus  @default(DRAFT)
+  createdAt   TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  module    Module? @relation("ModuleAssessment", fields: [moduleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  course    Course? @relation("CourseFinalAssessment", fields: [courseId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  questions Question[]
+  attempts  AssessmentAttempt[]
+}
+
+model Question {
+  id           Int           @id @default(autoincrement())
+  assessmentId Int
+  statement    String
+  type         QuestionType
+  order        Int
+  status       ContentStatus @default(DRAFT)
+  createdAt    TimestamptzString @default(now())
+  updatedAt    temporal.updatedAtString()
+
+  assessment Assessment     @relation(fields: [assessmentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  options    AnswerOption[]
+  responses  QuestionResponse[]
+
+  @@unique([assessmentId, order])
+}
+
+model AnswerOption {
+  id        Int     @id @default(autoincrement())
+  questionId Int
+  text      String
+  isCorrect Boolean @default(false)
+  order     Int
+
+  question  Question           @relation(fields: [questionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  responses QuestionResponse[]
+
+  @@unique([questionId, order])
+}
+
+model LessonProgress {
+  userId      Int
+  lessonId    Int
+  completedAt TimestamptzString @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([userId, lessonId])
+}
+
+model AssessmentAttempt {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  assessmentId Int
+  score        Decimal
+  completedAt  TimestamptzString @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  responses  QuestionResponse[]
+
+  @@unique([userId, assessmentId])
+}
+
+model QuestionResponse {
+  id              Int @id @default(autoincrement())
+  attemptId       Int
+  questionId      Int
+  answerOptionId  Int
+
+  attempt      AssessmentAttempt @relation(fields: [attemptId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  question     Question          @relation(fields: [questionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  answerOption AnswerOption      @relation(fields: [answerOptionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([attemptId, questionId])
+}

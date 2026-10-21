@@ -1,0 +1,9 @@
+packages:
+  - backend
+  - frontend
+
+allowBuilds:
+  '@tailwindcss/oxide': true
+  esbuild: true
+  msgpackr-extract: true
+  workerd: true
