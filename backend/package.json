@@ -9,9 +9,10 @@
     "build": "tsc",
     "build:web": "pnpm --filter unicyber-web build",
     "build:all": "pnpm build && pnpm build:web",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit",
     "typecheck:web": "pnpm --filter unicyber-web typecheck",
     "typecheck:all": "pnpm typecheck && pnpm typecheck:web",
+    "test": "tsx --test test/course-management.test.ts",
     "start": "node dist/server.js",
     "postinstall": "prisma skills sync || exit 0",
     "contract:emit": "prisma contract emit"

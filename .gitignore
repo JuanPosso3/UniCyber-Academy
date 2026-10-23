@@ -49,4 +49,6 @@ backend/.devin/
 # Prisma local AI documentation
 backend/prisma-8.md
 
+# Documentation and guides
+docs/
 frontendGuide/

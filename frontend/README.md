@@ -1,9 +1,9 @@
-# Frontend integrado (subconjunto de autenticación)
+# Frontend integrado
 
-Este directorio contiene el subconjunto mínimo del frontend necesario para
-conectar registro e inicio de sesión con el backend real. Reutiliza las vistas,
-componentes, estilos y la identidad visual del frontend original
-(`unicyber-academyGuiaDiseñoFrontendd`), que no fue modificado.
+Este directorio contiene el frontend conectado al backend real: autenticación,
+catálogo de cursos, detalle de curso y administración de cursos/módulos.
+Reutiliza las vistas, componentes, estilos y la identidad visual del frontend
+original (`unicyber-academyGuiaDiseñoFrontendd`), que no fue modificado.
 
 Es un proyecto hermano de `backend/` dentro del workspace de la raíz.
 
@@ -13,10 +13,23 @@ Es un proyecto hermano de `backend/` dentro del workspace de la raíz.
 |---|---|
 | `/login` | Inicio de sesión |
 | `/register` | Registro |
-| `/dashboard` | Ancla protegida posterior al login |
+| `/dashboard` | Panel posterior al login |
+| `/courses` | Catálogo de cursos publicados |
+| `/courses/:courseId` | Detalle de curso y módulos publicados |
+| `/admin/courses` | Gestión de cursos (administrador) |
+| `/admin/courses/new` | Crear curso (administrador) |
+| `/admin/courses/:courseId/edit` | Editar curso (administrador) |
+| `/admin/courses/:courseId/modules` | Gestión de módulos (administrador) |
+| `/admin/courses/:courseId/modules/new` | Crear módulo (administrador) |
+| `/admin/courses/:courseId/modules/:moduleId/edit` | Editar módulo (administrador) |
 
-La navegación mantiene el patrón por estado del prototipo y sincroniza la URL,
-sin añadir React Router.
+La navegación mantiene el patrón por estado del prototipo y sincroniza la URL
+con `pushState`, sin añadir React Router. Las rutas profundas sobreviven a una
+recarga porque Express sirve el SPA.
+
+El acceso administrativo depende del rol persistido `ADMINISTRATIVE`; la API
+también valida los permisos. Detalle en
+`docs/COURSE_CATALOG_AND_MODULE_MANAGEMENT.md`.
 
 ## Desarrollo
 

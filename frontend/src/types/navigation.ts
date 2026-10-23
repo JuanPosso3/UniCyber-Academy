@@ -1,10 +1,8 @@
 /**
- * Navegación mínima para la integración de autenticación.
+ * Navegación basada en URLs sin añadir React Router.
  *
- * Se mantiene el patrón original basado en estado, sin añadir React
- * Router. Las tres rutas se sincronizan con la URL para que recargar
- * /login, /register o /dashboard funcione en desarrollo y producción.
+ * `App.tsx` sincroniza el estado con `window.history`, de modo que las
+ * rutas profundas (`/courses/3`, `/admin/courses/2/modules`) funcionan
+ * al recargar tanto en Vite como en el build servido por Express.
  */
-export type Page = "login" | "register" | "dashboard";
-
-export type NavigateFn = (page: Page) => void;
+export type NavigateFn = (path: string) => void;

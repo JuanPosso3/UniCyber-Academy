@@ -9,6 +9,7 @@
     "typecheck": "pnpm --filter backend typecheck",
     "typecheck:web": "pnpm --filter unicyber-web typecheck",
     "typecheck:all": "pnpm typecheck && pnpm typecheck:web",
+    "test": "pnpm --filter backend test",
     "build": "pnpm --filter backend build",
     "build:web": "pnpm --filter unicyber-web build",
     "build:all": "pnpm build && pnpm build:web",

@@ -1,45 +1,56 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuthLayout } from "./components/layout/AuthLayout";
+import { AuthenticatedLayout } from "./components/layout/AuthenticatedLayout";
+import { StatePanel } from "./components/ui/StatePanel";
+import { Button } from "./components/ui/Button";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { isAdminRole } from "./lib/auth";
+import {
+  isAdminRoute,
+  normalizePath,
+  parseRoute,
+} from "./lib/routes";
+import { AdminCoursesPage } from "./pages/admin/AdminCoursesPage";
+import { CourseFormPage } from "./pages/admin/CourseFormPage";
+import { CourseModulesPage } from "./pages/admin/CourseModulesPage";
+import { ModuleFormPage } from "./pages/admin/ModuleFormPage";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
-import { SessionHome } from "./pages/dashboard/SessionHome";
-import type { Page } from "./types/navigation";
-
-const PAGE_PATHS: Record<Page, string> = {
-  login: "/login",
-  register: "/register",
-  dashboard: "/dashboard",
-};
-
-function pageFromPath(pathname: string): Page {
-  const normalized = pathname.replace(/\/+$/, "") || "/";
-
-  if (normalized === "/register") {
-    return "register";
-  }
-
-  if (normalized === "/dashboard") {
-    return "dashboard";
-  }
-
-  return "login";
-}
+import { CourseDetailPage } from "./pages/courses/CourseDetailPage";
+import { CoursesPage } from "./pages/courses/CoursesPage";
+import { DashboardPage } from "./pages/dashboard/DashboardPage";
 
 function AppContent() {
   const { user, isBootstrapping } = useAuth();
-  const [page, setPage] = useState<Page>(() =>
-    pageFromPath(window.location.pathname),
+  const [pathname, setPathname] = useState(
+    () => window.location.pathname,
   );
+  const route = useMemo(() => parseRoute(pathname), [pathname]);
 
-  const navigate = useCallback((nextPage: Page) => {
-    setPage(nextPage);
-    window.history.pushState({}, "", PAGE_PATHS[nextPage]);
+  const navigate = useCallback((nextPath: string) => {
+    const path = normalizePath(nextPath);
+
+    if (path === window.location.pathname) {
+      return;
+    }
+
+    window.history.pushState({}, "", path);
+    setPathname(path);
+    window.scrollTo({ top: 0 });
+  }, []);
+
+  const replace = useCallback((path: string) => {
+    if (path === window.location.pathname) {
+      return;
+    }
+
+    window.history.replaceState({}, "", path);
+    setPathname(path);
   }, []);
 
   useEffect(() => {
     const handlePopState = () => {
-      setPage(pageFromPath(window.location.pathname));
+      setPathname(window.location.pathname);
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -54,17 +65,23 @@ function AppContent() {
       return;
     }
 
-    if (user && (page === "login" || page === "register")) {
-      setPage("dashboard");
-      window.history.replaceState({}, "", PAGE_PATHS.dashboard);
+    const isPublicRoute =
+      route.name === "login" || route.name === "register";
+
+    if (!user && !isPublicRoute) {
+      replace("/login");
       return;
     }
 
-    if (!user && page === "dashboard") {
-      setPage("login");
-      window.history.replaceState({}, "", PAGE_PATHS.login);
+    if (user && isPublicRoute) {
+      replace("/dashboard");
+      return;
     }
-  }, [user, isBootstrapping, page]);
+
+    if (user && isAdminRoute(route) && !isAdminRole(user.role)) {
+      replace("/courses");
+    }
+  }, [isBootstrapping, user, route, replace]);
 
   if (isBootstrapping) {
     return (
@@ -84,15 +101,123 @@ function AppContent() {
     );
   }
 
-  if (user) {
-    return <SessionHome navigate={navigate} />;
+  if (!user) {
+    return route.name === "register" ? (
+      <Register navigate={navigate} />
+    ) : (
+      <Login navigate={navigate} />
+    );
   }
 
-  return page === "register" ? (
-    <Register navigate={navigate} />
-  ) : (
-    <Login navigate={navigate} />
-  );
+  // La guardia reemplaza la URL por /dashboard; se evita mostrar el
+  // estado "no encontrado" durante ese primer render.
+  if (route.name === "login" || route.name === "register") {
+    return <DashboardPage navigate={navigate} />;
+  }
+
+  if (isAdminRoute(route) && !isAdminRole(user.role)) {
+    return (
+      <AuthenticatedLayout
+        title="Acceso restringido"
+        currentPath={pathname}
+        navigate={navigate}
+      >
+        <StatePanel
+          variant="error"
+          title="Acceso restringido"
+          description="Esta sección está disponible únicamente para administradores."
+          action={
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => navigate("/courses")}
+            >
+              Ir al catálogo
+            </Button>
+          }
+        />
+      </AuthenticatedLayout>
+    );
+  }
+
+  switch (route.name) {
+    case "dashboard":
+      return <DashboardPage navigate={navigate} />;
+
+    case "courses":
+      return <CoursesPage navigate={navigate} />;
+
+    case "course-detail":
+      return (
+        <CourseDetailPage
+          courseId={route.courseId}
+          navigate={navigate}
+        />
+      );
+
+    case "admin-courses":
+      return <AdminCoursesPage navigate={navigate} />;
+
+    case "admin-course-new":
+      return <CourseFormPage navigate={navigate} />;
+
+    case "admin-course-edit":
+      return (
+        <CourseFormPage
+          courseId={route.courseId}
+          navigate={navigate}
+        />
+      );
+
+    case "admin-modules":
+      return (
+        <CourseModulesPage
+          courseId={route.courseId}
+          navigate={navigate}
+        />
+      );
+
+    case "admin-module-new":
+      return (
+        <ModuleFormPage
+          courseId={route.courseId}
+          navigate={navigate}
+        />
+      );
+
+    case "admin-module-edit":
+      return (
+        <ModuleFormPage
+          courseId={route.courseId}
+          moduleId={route.moduleId}
+          navigate={navigate}
+        />
+      );
+
+    default:
+      return (
+        <AuthenticatedLayout
+          title="Página no encontrada"
+          currentPath={pathname}
+          navigate={navigate}
+        >
+          <StatePanel
+            variant="empty"
+            title="La página no existe"
+            description="La dirección solicitada no corresponde a ninguna pantalla disponible."
+            action={
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => navigate("/dashboard")}
+              >
+                Volver al panel
+              </Button>
+            }
+          />
+        </AuthenticatedLayout>
+      );
+  }
 }
 
 export default function App() {

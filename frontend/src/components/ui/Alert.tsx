@@ -40,7 +40,9 @@ export function Alert({ variant = "info", children, icon, className = "" }: Aler
       className={cn("flex items-center gap-2 rounded-xl border px-3 py-2", classes, className)}
     >
       {icon ?? <Icon size={14} />}
-      <span className="text-xs font-semibold">{children}</span>
+      <div className="flex min-w-0 flex-1 items-center gap-2 text-xs font-semibold">
+        {children}
+      </div>
     </div>
   );
 }

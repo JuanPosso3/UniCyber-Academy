@@ -6,9 +6,13 @@ hermanos y se gestionan desde la raíz con pnpm.
 ```text
 unicyber/
 ├── backend/      API Express + Prisma + autenticación JWT
-├── frontend/     React + Vite (registro, login y sesión protegida)
+├── frontend/     React + Vite (autenticación, catálogo y administración)
 └── pnpm-workspace.yaml
 ```
+
+Funcionalidad actual: registro e inicio de sesión, catálogo de cursos publicados
+para estudiantes y administración de cursos/módulos para usuarios con rol
+`ADMINISTRATIVE`.
 
 La carpeta `unicyber-academyGuiaDiseñoFrontendd/` corresponde al prototipo
 original y se conserva sin modificaciones como referencia.
@@ -60,6 +64,17 @@ pnpm typecheck:web   # frontend
 pnpm typecheck:all   # ambos
 ```
 
+## Pruebas
+
+```bash
+pnpm test
+```
+
+Ejecuta la prueba de integración de cursos y módulos contra PostgreSQL real.
+Crea datos temporales, usa las rutas HTTP de la aplicación y elimina sus propios
+datos al finalizar. Detalle en
+`backend/docs/COURSE_CATALOG_AND_MODULE_MANAGEMENT.md`.
+
 ## Build
 
 Desde la raíz:
@@ -82,6 +97,14 @@ Abrir <http://localhost:3000/login>. Express sirve la API y el build de
 La ruta del build se resuelve desde la ubicación del archivo compilado del
 backend, no desde el directorio de trabajo. Por eso funciona tanto si `pnpm
 start` se ejecuta desde la raíz como desde `backend/`.
+
+## Documentación
+
+- `backend/docs/AUTH_INTEGRATION.md`: autenticación y convenciones de API.
+- `backend/docs/COURSE_CATALOG_AND_MODULE_MANAGEMENT.md`: contrato, reglas y
+  pruebas de cursos/módulos.
+- `frontend/docs/COURSE_CATALOG_AND_MODULE_MANAGEMENT.md`: rutas, pantallas y
+  componentes del catálogo y la administración.
 
 ## Variables de entorno
 

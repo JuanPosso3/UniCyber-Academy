@@ -32,3 +32,15 @@ export function isUserStatus(value: unknown): value is UserStatus {
     (USER_STATUSES as readonly string[]).includes(value)
   );
 }
+
+/**
+ * Rol administrativo efectivo dentro de la aplicación.
+ *
+ * El contrato histórico conserva el valor `ADMINISTRATIVE`; la
+ * funcionalidad de cursos lo utiliza como el rol `admin` oficial sin
+ * modificar el enum ni los usuarios existentes. Cualquier otro valor
+ * carece de permisos administrativos.
+ */
+export function isAdminRole(role: UserRole): boolean {
+  return role === 'ADMINISTRATIVE';
+}

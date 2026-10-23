@@ -4,6 +4,8 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { authRouter } from './application/auth/auth.routes.js';
+import { courseRouter } from './application/courses/course.routes.js';
+import { adminCourseRouter } from './application/courses/admin-course.routes.js';
 import { db } from './prisma/db.js';
 import { AppError, errorHandler } from './infrastructure/http/errors.js';
 
@@ -59,6 +61,8 @@ export function createApp(): express.Express {
   });
 
   app.use('/api/auth', authRouter);
+  app.use('/api/courses', courseRouter);
+  app.use('/api/admin/courses', adminCourseRouter);
 
   // Cualquier ruta /api desconocida responde en JSON, no con el HTML
   // del frontend.

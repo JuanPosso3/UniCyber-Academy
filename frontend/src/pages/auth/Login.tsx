@@ -153,7 +153,7 @@ export function Login({ navigate }: LoginProps) {
             </>
           )}
         </Button>
-
+        {/* Divider Por si se implementa inicio con git o google pero no creo
         <div className="relative flex items-center gap-3 my-2">
           <div className="flex-1 border-t border-white/10" />
           <span className="text-xs text-muted-foreground">
@@ -170,6 +170,7 @@ export function Login({ navigate }: LoginProps) {
         >
           <Github size={16} /> GitHub
         </button>
+        */}
       </form>
     </AuthLayout>
   );
