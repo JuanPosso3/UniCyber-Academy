@@ -12,12 +12,16 @@ import {
 } from "./lib/routes";
 import { AdminCoursesPage } from "./pages/admin/AdminCoursesPage";
 import { CourseFormPage } from "./pages/admin/CourseFormPage";
+import { CourseLessonsPage } from "./pages/admin/CourseLessonsPage";
 import { CourseModulesPage } from "./pages/admin/CourseModulesPage";
+import { LessonFormPage } from "./pages/admin/LessonFormPage";
+import { LessonPreviewPage } from "./pages/admin/LessonPreviewPage";
 import { ModuleFormPage } from "./pages/admin/ModuleFormPage";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
 import { CourseDetailPage } from "./pages/courses/CourseDetailPage";
 import { CoursesPage } from "./pages/courses/CoursesPage";
+import { LessonPage } from "./pages/courses/LessonPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 
 function AppContent() {
@@ -155,6 +159,15 @@ function AppContent() {
         />
       );
 
+    case "lesson":
+      return (
+        <LessonPage
+          courseId={route.courseId}
+          lessonId={route.lessonId}
+          navigate={navigate}
+        />
+      );
+
     case "admin-courses":
       return <AdminCoursesPage navigate={navigate} />;
 
@@ -190,6 +203,44 @@ function AppContent() {
         <ModuleFormPage
           courseId={route.courseId}
           moduleId={route.moduleId}
+          navigate={navigate}
+        />
+      );
+
+    case "admin-lessons":
+      return (
+        <CourseLessonsPage
+          courseId={route.courseId}
+          moduleId={route.moduleId}
+          navigate={navigate}
+        />
+      );
+
+    case "admin-lesson-new":
+      return (
+        <LessonFormPage
+          courseId={route.courseId}
+          moduleId={route.moduleId}
+          navigate={navigate}
+        />
+      );
+
+    case "admin-lesson-edit":
+      return (
+        <LessonFormPage
+          courseId={route.courseId}
+          moduleId={route.moduleId}
+          lessonId={route.lessonId}
+          navigate={navigate}
+        />
+      );
+
+    case "admin-lesson-preview":
+      return (
+        <LessonPreviewPage
+          courseId={route.courseId}
+          moduleId={route.moduleId}
+          lessonId={route.lessonId}
           navigate={navigate}
         />
       );

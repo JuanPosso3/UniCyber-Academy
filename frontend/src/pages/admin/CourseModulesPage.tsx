@@ -362,6 +362,19 @@ export function CourseModulesPage({
                           <Edit2 size={14} /> Editar
                         </Button>
 
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() =>
+                            navigate(
+                              `/admin/courses/${courseId}/modules/${module.id}/lessons`,
+                            )
+                          }
+                        >
+                          <FileText size={14} /> Lecciones
+                        </Button>
+
                         {module.status === "DRAFT" && (
                           <Button
                             type="button"

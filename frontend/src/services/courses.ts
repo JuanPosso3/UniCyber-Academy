@@ -10,6 +10,7 @@ import type {
   ModulePayload,
   ModuleResponse,
 } from "../types/course";
+import type { StudentCourseDetailResponse } from "../types/lesson";
 
 export function listAvailableCoursesRequest(): Promise<CourseListResponse> {
   return apiRequest<CourseListResponse>("/courses");
@@ -17,8 +18,8 @@ export function listAvailableCoursesRequest(): Promise<CourseListResponse> {
 
 export function getAvailableCourseRequest(
   courseId: number,
-): Promise<CourseDetailResponse> {
-  return apiRequest<CourseDetailResponse>(`/courses/${courseId}`);
+): Promise<StudentCourseDetailResponse> {
+  return apiRequest<StudentCourseDetailResponse>(`/courses/${courseId}`);
 }
 
 export function listAdminCoursesRequest(): Promise<CourseListResponse> {

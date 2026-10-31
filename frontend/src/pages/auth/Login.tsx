@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, Github, Lock, User } from "lucide-react";
+import { ArrowRight, Lock, User } from "lucide-react";
 import { AuthLayout } from "../../components/layout/AuthLayout";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
