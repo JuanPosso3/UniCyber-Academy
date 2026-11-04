@@ -25,6 +25,7 @@ import type {
   ActivityCheckResponse,
   ChainedActivity,
   DecisionStepsActivity,
+  EmailAnalysisActivity,
   IdentifySuspiciousActivity,
   LabActivity,
   LabContent,
@@ -41,6 +42,7 @@ import {
   type ActivityFeedback,
 } from "./ActivityFrame";
 import { TerminalActivityView } from "./TerminalActivityView";
+import { EmailAnalysisActivityView } from "./EmailAnalysisActivityView";
 
 export interface LaboratoryRendererProps {
   content: LabContent;
@@ -492,6 +494,17 @@ function ActivityView({
           feedback={feedback}
           onCheck={(answer, silent) => check(answer, { silent })}
           onRunCommand={(command) => onRunCommand(activity.id, command)}
+        />
+      );
+    case "EMAIL_ANALYSIS":
+      return (
+        <EmailAnalysisActivityView
+          activity={displayActivity as EmailAnalysisActivity}
+          solved={solved}
+          feedback={feedback}
+          onCheck={(answer) => {
+            void check(answer);
+          }}
         />
       );
     case "CHAINED":

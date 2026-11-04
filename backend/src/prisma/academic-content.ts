@@ -473,6 +473,113 @@ const courseOne: AcademicCourse = {
                 order: ['detener', 'conservar', 'verificar', 'reportar', 'seguimiento'],
               },
             },
+            {
+              id: 'correo-sospechoso',
+              type: 'EMAIL_ANALYSIS',
+              title: 'Analiza el correo sospechoso',
+              instructions:
+                'Lee el correo de principio a fin y selecciona directamente los elementos que consideres sospechosos. Recuerda que también hay partes legítimas: no las marques. Puedes desmarcar cualquier elemento antes de comprobar.',
+              required: true,
+              hints: [
+                'Presta atención al dominio utilizado por quien envía el mensaje.',
+                'Analiza si el lenguaje del correo busca generar miedo o urgencia.',
+                'Piensa si una institución debería solicitar tus credenciales mediante un enlace recibido por correo.',
+                'Observa si el mensaje permite verificar la identidad de quien lo envía.',
+              ],
+              email: {
+                fromName: 'Soporte Institucional',
+                fromAddress:
+                  'soporte.seguridad@institucion-verificacion.example.com',
+                fromElementId: 'remitente',
+                toAddress: 'estudiante@institucion.example.com',
+                toElementId: 'destinatario',
+                subject: 'URGENTE: Su cuenta institucional será suspendida',
+                subjectElementId: 'asunto',
+                datetime: 'lunes, 26 de octubre de 2026, 9:14 a. m.',
+                datetimeElementId: 'fecha',
+                greeting: 'Estimado estudiante:',
+                greetingElementId: 'saludo',
+                body: [
+                  {
+                    text: 'Hemos detectado una actividad inusual en su cuenta institucional.',
+                  },
+                  {
+                    text: 'Por motivos de seguridad, necesitamos que realice una verificación inmediata de sus credenciales.',
+                    elementId: 'credenciales',
+                  },
+                  {
+                    text: 'Si no completa este procedimiento durante las próximas 24 horas, su cuenta será bloqueada temporalmente y podría perder el acceso a los servicios académicos.',
+                    elementId: 'suspension',
+                  },
+                  {
+                    text: 'Para evitar la suspensión, ingrese al siguiente enlace y confirme sus datos:',
+                  },
+                ],
+                linkLabel: 'VERIFICAR MI CUENTA AHORA',
+                linkUrl:
+                  'http://institucion-verificacion.example.com/verificar-cuenta',
+                linkElementId: 'enlace',
+                closingLines: ['Gracias por su colaboración.'],
+                closingElementId: 'despedida',
+                signatureLines: ['Departamento de Seguridad Informática'],
+                signatureElementId: 'firma',
+                confidentialityNote: 'Aviso de confidencialidad institucional',
+                disclaimer:
+                  'Este escenario es ficticio y se utiliza exclusivamente con fines educativos. Ningún enlace es real y no se envía ningún correo.',
+              },
+              elements: [
+                {
+                  id: 'remitente',
+                  text: 'Datos del remitente (nombre y dirección de correo)',
+                },
+                {
+                  id: 'destinatario',
+                  text: 'Destinatario del mensaje',
+                },
+                {
+                  id: 'asunto',
+                  text: 'Línea de asunto',
+                },
+                {
+                  id: 'fecha',
+                  text: 'Fecha y hora de envío',
+                },
+                {
+                  id: 'saludo',
+                  text: 'Saludo inicial',
+                },
+                {
+                  id: 'credenciales',
+                  text: 'Solicitud de verificación de credenciales',
+                },
+                {
+                  id: 'suspension',
+                  text: 'Advertencia de suspensión de la cuenta',
+                },
+                {
+                  id: 'enlace',
+                  text: 'Enlace de verificación',
+                },
+                {
+                  id: 'despedida',
+                  text: 'Cierre del mensaje',
+                },
+                {
+                  id: 'firma',
+                  text: 'Firma institucional',
+                },
+              ],
+              solution: {
+                elementIds: [
+                  'remitente',
+                  'asunto',
+                  'credenciales',
+                  'suspension',
+                  'enlace',
+                  'firma',
+                ],
+              },
+            },
           ],
         ),
       ],

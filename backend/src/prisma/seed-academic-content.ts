@@ -15,6 +15,8 @@ interface SeedSummary {
   lessonsCreated: number;
   assessmentsCreated: number;
   lessonsSkipped: number;
+  lessonsUpdated: number;
+  lessonsLockedByProgress: number;
 }
 
 async function validateAllContent(): Promise<void> {
@@ -106,6 +108,7 @@ async function findOrCreateLesson(
 
   if (existing) {
     summary.lessonsSkipped += 1;
+    await refreshExistingLesson(existing, lesson, summary);
     return existing;
   }
 
@@ -125,6 +128,41 @@ async function findOrCreateLesson(
 
   summary.lessonsCreated += 1;
   return created;
+}
+
+/**
+ * Sincroniza el contenido fuente con una lección existente.
+ * Solo se actualiza si cambió el contenido y si ningún estudiante
+ * registró progreso en ella; de lo contrario se conserva intacta.
+ */
+async function refreshExistingLesson(
+  existing: { id: number; type: unknown; content: unknown },
+  lesson: AcademicCourse['modules'][number]['lessons'][number],
+  summary: SeedSummary,
+): Promise<void> {
+  const sameType = existing.type === lesson.type;
+  const sameContent =
+    JSON.stringify(existing.content) === JSON.stringify(lesson.content);
+
+  if (sameType && sameContent) {
+    return;
+  }
+
+  const anyProgress = await db.orm.public.LessonProgress
+    .where({ lessonId: existing.id })
+    .first();
+
+  if (anyProgress) {
+    summary.lessonsLockedByProgress += 1;
+    return;
+  }
+
+  await db.orm.public.Lesson.where({ id: existing.id }).update({
+    type: lesson.type,
+    content: lesson.content as unknown as JsonValue,
+  });
+
+  summary.lessonsUpdated += 1;
 }
 
 async function ensureModuleAssessment(
@@ -247,6 +285,8 @@ async function main(): Promise<void> {
     lessonsCreated: 0,
     assessmentsCreated: 0,
     lessonsSkipped: 0,
+    lessonsUpdated: 0,
+    lessonsLockedByProgress: 0,
   };
 
   for (const course of ACADEMIC_COURSES) {
@@ -280,6 +320,10 @@ async function main(): Promise<void> {
   console.log(`Lecciones creadas: ${summary.lessonsCreated}`);
   console.log(`Evaluaciones DRAFT creadas: ${summary.assessmentsCreated}`);
   console.log(`Lecciones existentes conservadas: ${summary.lessonsSkipped}`);
+  console.log(`Lecciones con contenido actualizado: ${summary.lessonsUpdated}`);
+  console.log(
+    `Lecciones sin actualizar por progreso registrado: ${summary.lessonsLockedByProgress}`,
+  );
 }
 
 main()
