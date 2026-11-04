@@ -10,6 +10,7 @@ export class AppError extends Error {
     public readonly code: string,
     message: string,
     public readonly fields?: Record<string, string>,
+    public readonly details?: unknown,
   ) {
     super(message);
     this.name = 'AppError';
@@ -44,6 +45,7 @@ export const errorHandler: ErrorRequestHandler = (
         code: error.code,
         message: error.message,
         ...(error.fields ? { fields: error.fields } : {}),
+        ...(error.details !== undefined ? { details: error.details } : {}),
       },
     });
     return;

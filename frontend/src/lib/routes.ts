@@ -4,12 +4,27 @@ export type AppRoute =
   | { name: "dashboard" }
   | { name: "courses" }
   | { name: "course-detail"; courseId: number }
+  | { name: "lesson"; courseId: number; lessonId: number }
   | { name: "admin-courses" }
   | { name: "admin-course-new" }
   | { name: "admin-course-edit"; courseId: number }
   | { name: "admin-modules"; courseId: number }
   | { name: "admin-module-new"; courseId: number }
   | { name: "admin-module-edit"; courseId: number; moduleId: number }
+  | { name: "admin-lessons"; courseId: number; moduleId: number }
+  | { name: "admin-lesson-new"; courseId: number; moduleId: number }
+  | {
+      name: "admin-lesson-edit";
+      courseId: number;
+      moduleId: number;
+      lessonId: number;
+    }
+  | {
+      name: "admin-lesson-preview";
+      courseId: number;
+      moduleId: number;
+      lessonId: number;
+    }
   | { name: "not-found" };
 
 const LEGACY_PATHS: Record<string, string> = {
@@ -74,6 +89,17 @@ export function parseRoute(pathname: string): AppRoute {
     }
   }
 
+  const lesson = /^\/courses\/(\d+)\/lessons\/(\d+)$/.exec(normalized);
+
+  if (lesson) {
+    const courseId = parseId(lesson[1]);
+    const lessonId = parseId(lesson[2]);
+
+    if (courseId && lessonId) {
+      return { name: "lesson", courseId, lessonId };
+    }
+  }
+
   const courseEdit = /^\/admin\/courses\/(\d+)\/edit$/.exec(normalized);
 
   if (courseEdit) {
@@ -118,6 +144,72 @@ export function parseRoute(pathname: string): AppRoute {
     }
   }
 
+  const lessonNew =
+    /^\/admin\/courses\/(\d+)\/modules\/(\d+)\/lessons\/new$/.exec(
+      normalized,
+    );
+
+  if (lessonNew) {
+    const courseId = parseId(lessonNew[1]);
+    const moduleId = parseId(lessonNew[2]);
+
+    if (courseId && moduleId) {
+      return { name: "admin-lesson-new", courseId, moduleId };
+    }
+  }
+
+  const lessonEdit =
+    /^\/admin\/courses\/(\d+)\/modules\/(\d+)\/lessons\/(\d+)\/edit$/.exec(
+      normalized,
+    );
+
+  if (lessonEdit) {
+    const courseId = parseId(lessonEdit[1]);
+    const moduleId = parseId(lessonEdit[2]);
+    const lessonId = parseId(lessonEdit[3]);
+
+    if (courseId && moduleId && lessonId) {
+      return {
+        name: "admin-lesson-edit",
+        courseId,
+        moduleId,
+        lessonId,
+      };
+    }
+  }
+
+  const lessonPreview =
+    /^\/admin\/courses\/(\d+)\/modules\/(\d+)\/lessons\/(\d+)\/preview$/.exec(
+      normalized,
+    );
+
+  if (lessonPreview) {
+    const courseId = parseId(lessonPreview[1]);
+    const moduleId = parseId(lessonPreview[2]);
+    const lessonId = parseId(lessonPreview[3]);
+
+    if (courseId && moduleId && lessonId) {
+      return {
+        name: "admin-lesson-preview",
+        courseId,
+        moduleId,
+        lessonId,
+      };
+    }
+  }
+
+  const lessons =
+    /^\/admin\/courses\/(\d+)\/modules\/(\d+)\/lessons$/.exec(normalized);
+
+  if (lessons) {
+    const courseId = parseId(lessons[1]);
+    const moduleId = parseId(lessons[2]);
+
+    if (courseId && moduleId) {
+      return { name: "admin-lessons", courseId, moduleId };
+    }
+  }
+
   return { name: "not-found" };
 }
 
@@ -133,6 +225,8 @@ export function routeTitle(route: AppRoute): string {
       return "Catálogo de cursos";
     case "course-detail":
       return "Detalle del curso";
+    case "lesson":
+      return "Lección";
     case "admin-courses":
       return "Administración de cursos";
     case "admin-course-new":
@@ -145,6 +239,14 @@ export function routeTitle(route: AppRoute): string {
       return "Crear módulo";
     case "admin-module-edit":
       return "Editar módulo";
+    case "admin-lessons":
+      return "Lecciones del módulo";
+    case "admin-lesson-new":
+      return "Crear lección";
+    case "admin-lesson-edit":
+      return "Editar lección";
+    case "admin-lesson-preview":
+      return "Vista previa de la lección";
     default:
       return "UniCyber Academy";
   }

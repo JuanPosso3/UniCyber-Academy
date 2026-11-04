@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { authRouter } from './application/auth/auth.routes.js';
 import { courseRouter } from './application/courses/course.routes.js';
 import { adminCourseRouter } from './application/courses/admin-course.routes.js';
+import { adminLessonRouter } from './application/lessons/admin-lesson.routes.js';
 import { db } from './prisma/db.js';
 import { AppError, errorHandler } from './infrastructure/http/errors.js';
 
@@ -20,7 +21,10 @@ export function createApp(): express.Express {
   const app = express();
 
   app.disable('x-powered-by');
-  app.use(express.json({ limit: '10kb' }));
+  // El contenido JSON de lecciones y laboratorios puede superar el
+  // límite histórico de 10 KB. Se mantiene un límite acotado para el
+  // resto de la API.
+  app.use(express.json({ limit: '1mb' }));
 
   app.use((_req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -62,6 +66,7 @@ export function createApp(): express.Express {
 
   app.use('/api/auth', authRouter);
   app.use('/api/courses', courseRouter);
+  app.use('/api/admin/courses', adminLessonRouter);
   app.use('/api/admin/courses', adminCourseRouter);
 
   // Cualquier ruta /api desconocida responde en JSON, no con el HTML
