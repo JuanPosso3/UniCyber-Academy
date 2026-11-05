@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'1fd3815e02989b0d4c9a59d3f615e490776c2ad62422db5ed523fd3e44572172'>;
+  StorageHashBase<'d5be31c6520dd996597c1e6b48d169aebd44c86fa52b6c6ff7696feb2a376317'>;
 export type ExecutionHash =
   ExecutionHashBase<'b437da8b8ac02e87ef9ddde1d30e75b781ef71fbf2ae601187963ab145ed8bac'>;
 export type ProfileHash =
@@ -308,6 +308,8 @@ export type FieldOutputTypes = {
       readonly type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE';
       readonly order: CodecTypes['pg/int4@1']['output'];
       readonly status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+      readonly explanation: CodecTypes['pg/text@1']['output'] | null;
+      readonly hint: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
@@ -398,6 +400,8 @@ export type FieldInputTypes = {
       readonly type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE';
       readonly order: CodecTypes['pg/int4@1']['input'];
       readonly status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+      readonly explanation: CodecTypes['pg/text@1']['input'] | null;
+      readonly hint: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
@@ -484,6 +488,8 @@ export type StorageColumnTypes = {
     readonly question: {
       readonly assessmentId: CodecTypes['pg/int4@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly explanation: CodecTypes['pg/text@1']['output'] | null;
+      readonly hint: CodecTypes['pg/text@1']['output'] | null;
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly order: CodecTypes['pg/int4@1']['output'];
       readonly statement: CodecTypes['pg/text@1']['output'];
@@ -574,6 +580,8 @@ export type StorageColumnInputTypes = {
     readonly question: {
       readonly assessmentId: CodecTypes['pg/int4@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly explanation: CodecTypes['pg/text@1']['input'] | null;
+      readonly hint: CodecTypes['pg/text@1']['input'] | null;
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly order: CodecTypes['pg/int4@1']['input'];
       readonly statement: CodecTypes['pg/text@1']['input'];
@@ -678,6 +686,8 @@ export namespace Models {
     type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE';
     order: CodecTypes['pg/int4@1']['output'];
     status: 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
+    explanation: CodecTypes['pg/text@1']['output'] | null;
+    hint: CodecTypes['pg/text@1']['output'] | null;
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     assessment: public_Assessment;
@@ -1293,6 +1303,16 @@ type ContractBase = Omit<
                     readonly kind: 'literal';
                     readonly value: DefaultLiteralValue<'pg/text@1', 'DRAFT'>;
                   };
+                };
+                readonly explanation: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly hint: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
                 };
                 readonly createdAt: {
                   readonly nativeType: 'timestamptz';
@@ -2122,6 +2142,14 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly explanation: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly hint: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -2183,6 +2211,8 @@ type ContractBase = Omit<
                 readonly type: { readonly column: 'type' };
                 readonly order: { readonly column: 'order' };
                 readonly status: { readonly column: 'status' };
+                readonly explanation: { readonly column: 'explanation' };
+                readonly hint: { readonly column: 'hint' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
               };

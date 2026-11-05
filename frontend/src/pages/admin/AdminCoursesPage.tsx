@@ -4,6 +4,7 @@ import {
   BookOpen,
   CalendarDays,
   Edit2,
+  FileText,
   Layers,
   Plus,
   Search,
@@ -374,6 +375,19 @@ export function AdminCoursesPage({ navigate }: AdminCoursesPageProps) {
                         }
                       >
                         <Settings size={14} /> Módulos
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() =>
+                          navigate(
+                            `/admin/courses/${course.id}/assessment`,
+                          )
+                        }
+                      >
+                        <FileText size={14} /> Evaluación final
                       </Button>
 
                       {course.status !== "ARCHIVED" && (

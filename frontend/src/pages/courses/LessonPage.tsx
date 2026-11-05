@@ -209,13 +209,6 @@ export function LessonPage({ courseId, lessonId, navigate }: LessonPageProps) {
                 </Alert>
               )}
 
-              {data.module.assessmentRequired && !data.module.assessmentPassed && (
-                <Alert variant="warning">
-                  La evaluación de recordar de este módulo está pendiente. Al
-                  finalizar las lecciones, el siguiente módulo permanecerá
-                  bloqueado hasta superarla.
-                </Alert>
-              )}
 
               {data.lesson.type === "THEORY" ? (
                 isTheoryContent(data.lesson.content) ? (

@@ -3,6 +3,7 @@ import type {
   CourseModule,
   CourseSummary,
 } from "./course";
+import type { CourseFinalAssessmentSummary } from "./assessment";
 
 export type LessonType = "THEORY" | "LABORATORY";
 
@@ -270,13 +271,12 @@ export interface LearningLesson extends LessonSummary {
 export interface LearningModule extends CourseModule {
   locked: boolean;
   completed: boolean;
-  assessmentRequired: boolean;
-  assessmentPassed: boolean;
   lessons: LearningLesson[];
 }
 
 export interface LearningCourse extends CourseSummary {
   progress: CourseProgressSummary;
+  assessment: CourseFinalAssessmentSummary | null;
   modules: LearningModule[];
 }
 
@@ -305,8 +305,6 @@ export interface StudentLessonResponse {
     id: number;
     title: string;
     order: number;
-    assessmentRequired: boolean;
-    assessmentPassed: boolean;
   };
   navigation: LessonNavigation;
   modules: LearningModule[];

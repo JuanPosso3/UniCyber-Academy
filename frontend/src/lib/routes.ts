@@ -25,6 +25,10 @@ export type AppRoute =
       moduleId: number;
       lessonId: number;
     }
+  | { name: "admin-assessment"; courseId: number }
+  | { name: "admin-assessment-edit"; courseId: number }
+  | { name: "assessment"; courseId: number }
+  | { name: "assessment-results"; courseId: number }
   | { name: "not-found" };
 
 const LEGACY_PATHS: Record<string, string> = {
@@ -210,6 +214,50 @@ export function parseRoute(pathname: string): AppRoute {
     }
   }
 
+  const assessmentResults =
+    /^\/courses\/(\d+)\/assessment\/results$/.exec(normalized);
+
+  if (assessmentResults) {
+    const courseId = parseId(assessmentResults[1]);
+
+    if (courseId) {
+      return { name: "assessment-results", courseId };
+    }
+  }
+
+  const assessment =
+    /^\/courses\/(\d+)\/assessment$/.exec(normalized);
+
+  if (assessment) {
+    const courseId = parseId(assessment[1]);
+
+    if (courseId) {
+      return { name: "assessment", courseId };
+    }
+  }
+
+  const adminAssessmentEdit =
+    /^\/admin\/courses\/(\d+)\/assessment\/edit$/.exec(normalized);
+
+  if (adminAssessmentEdit) {
+    const courseId = parseId(adminAssessmentEdit[1]);
+
+    if (courseId) {
+      return { name: "admin-assessment-edit", courseId };
+    }
+  }
+
+  const adminAssessment =
+    /^\/admin\/courses\/(\d+)\/assessment$/.exec(normalized);
+
+  if (adminAssessment) {
+    const courseId = parseId(adminAssessment[1]);
+
+    if (courseId) {
+      return { name: "admin-assessment", courseId };
+    }
+  }
+
   return { name: "not-found" };
 }
 
@@ -247,6 +295,14 @@ export function routeTitle(route: AppRoute): string {
       return "Editar lección";
     case "admin-lesson-preview":
       return "Vista previa de la lección";
+    case "admin-assessment":
+      return "Evaluación final del curso";
+    case "admin-assessment-edit":
+      return "Editar evaluación final";
+    case "assessment":
+      return "Examen final";
+    case "assessment-results":
+      return "Resultados del examen";
     default:
       return "UniCyber Academy";
   }

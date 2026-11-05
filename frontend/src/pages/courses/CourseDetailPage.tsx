@@ -160,6 +160,77 @@ export function CourseDetailPage({
                   {course.progress.totalLessons} lecciones activas completadas.
                 </p>
               </div>
+
+              {course.assessment && (
+                <div className="mt-5 rounded-2xl border border-border bg-white/[0.03] p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-semibold text-white">
+                      Evaluación final del curso
+                    </h3>
+                    <Badge
+                      color={
+                        course.assessment.passed
+                          ? "green"
+                          : course.assessment.status === "ACTIVE"
+                            ? "blue"
+                            : "yellow"
+                      }
+                    >
+                      {course.assessment.passed
+                        ? "Completada"
+                        : course.assessment.status === "ACTIVE"
+                          ? "Disponible"
+                          : course.assessment.status === "DRAFT"
+                            ? "Borrador"
+                            : "Archivada"}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {course.assessment.questionCount} de 8 preguntas
+                  </p>
+                  {course.assessment.attempted && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Último intento:{" "}
+                      <span className="font-medium text-white">
+                        {course.assessment.score}%
+                      </span>{" "}
+                      {course.assessment.passed ? "Aprobado" : "No aprobado"}
+                    </p>
+                  )}
+                  {!course.assessment.attempted && course.assessment.status === "ACTIVE" && (
+                    <>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Aún no has presentado el examen final.
+                      </p>
+                      <div className="mt-3">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={() =>
+                            navigate(`/courses/${courseId}/assessment`)}
+                        >
+                          <PlayCircle size={14} /> Presentar examen final
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                  {course.assessment.attempted && (
+                    <div className="mt-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() =>
+                          navigate(`/courses/${courseId}/assessment/results`)}
+                        >
+                          Ver resultados
+                        </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
             </Card>
 
             <section aria-labelledby="modules-title">
@@ -215,13 +286,6 @@ export function CourseDetailPage({
                               </p>
                             </div>
                           </div>
-                          {module.assessmentRequired && !module.assessmentPassed && (
-                            <p className="mt-2 rounded-xl border border-warning/20 bg-warning/10 px-3 py-2 text-xs text-warning">
-                              La evaluación de recordar de este módulo está
-                              pendiente. Debes superarla para avanzar al
-                              siguiente módulo.
-                            </p>
-                          )}
                         </div>
 
                         {module.lessons.length === 0 ? (

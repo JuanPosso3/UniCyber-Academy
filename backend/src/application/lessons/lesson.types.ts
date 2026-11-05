@@ -1,5 +1,6 @@
 import type { ContentStatus } from '../../domain/content.js';
 import type { LessonType } from '../../domain/lesson.js';
+import type { CourseFinalAssessmentSummary } from '../assessments/assessment.types.js';
 import type {
   ContentValidationIssue,
   LessonContent,
@@ -41,8 +42,6 @@ export interface LearningLesson extends LessonSummary {
 export interface LearningModule extends ModuleSummary {
   locked: boolean;
   completed: boolean;
-  assessmentRequired: boolean;
-  assessmentPassed: boolean;
   lessons: LearningLesson[];
 }
 
@@ -55,6 +54,7 @@ export interface LearningCourse {
   createdAt: string;
   updatedAt: string;
   progress: CourseProgressSummary;
+  assessment: CourseFinalAssessmentSummary | null;
   modules: LearningModule[];
 }
 
@@ -83,8 +83,6 @@ export interface StudentLessonResponse {
     id: number;
     title: string;
     order: number;
-    assessmentRequired: boolean;
-    assessmentPassed: boolean;
   };
   navigation: LessonNavigation;
   modules: LearningModule[];

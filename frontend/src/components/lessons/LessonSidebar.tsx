@@ -84,11 +84,6 @@ export function LessonSidebar({
               <p className="mt-1 text-sm font-semibold text-white">
                 {module.title}
               </p>
-              {module.assessmentRequired && !module.assessmentPassed && (
-                <p className="mt-1 text-[11px] text-warning">
-                  Evaluación del módulo pendiente
-                </p>
-              )}
             </div>
 
             <ul className="divide-y divide-border/70">
