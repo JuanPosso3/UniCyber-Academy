@@ -198,9 +198,35 @@ export function CourseDetailPage({
                     </p>
                   )}
                   {!course.assessment.attempted && course.assessment.status === "ACTIVE" && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Aún no has presentado el examen final.
-                    </p>
+                    <>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Aún no has presentado el examen final.
+                      </p>
+                      <div className="mt-3">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          size="sm"
+                          onClick={() =>
+                            navigate(`/courses/${courseId}/assessment`)}
+                        >
+                          <PlayCircle size={14} /> Presentar examen final
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                  {course.assessment.attempted && (
+                    <div className="mt-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() =>
+                          navigate(`/courses/${courseId}/assessment/results`)}
+                        >
+                          Ver resultados
+                        </Button>
+                    </div>
                   )}
                 </div>
               )}
