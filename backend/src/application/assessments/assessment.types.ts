@@ -1,5 +1,6 @@
 import type { ContentStatus } from '../../domain/content.js';
 import type { QuestionType } from '../../domain/assessment.js';
+import type { Achievement } from '../achievements/achievement.types.js';
 
 /** Resumen del estado de la evaluación final para una persona. */
 export interface CourseFinalAssessmentSummary {
@@ -145,4 +146,5 @@ export interface StudentAssessmentResponse {
 /** Resultado inmediato tras enviar un intento. */
 export interface SubmitAssessmentResponse {
   results: StudentAssessmentResults;
+  newlyUnlocked?: Achievement[];
 }

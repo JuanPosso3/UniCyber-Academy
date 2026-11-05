@@ -9,6 +9,7 @@ import { adminCourseRouter } from './application/courses/admin-course.routes.js'
 import { adminLessonRouter } from './application/lessons/admin-lesson.routes.js';
 import { assessmentRouter } from './application/assessments/assessment.routes.js';
 import { adminAssessmentRouter } from './application/assessments/admin-assessment.routes.js';
+import { achievementRouter } from './application/achievements/achievement.routes.js';
 import { db } from './prisma/db.js';
 import { AppError, errorHandler } from './infrastructure/http/errors.js';
 
@@ -72,6 +73,7 @@ export function createApp(): express.Express {
   app.use('/api/admin/courses', adminLessonRouter);
   app.use('/api/admin/courses', adminCourseRouter);
   app.use('/api/admin/courses', adminAssessmentRouter);
+  app.use('/api/achievements', achievementRouter);
 
   // Cualquier ruta /api desconocida responde en JSON, no con el HTML
   // del frontend.

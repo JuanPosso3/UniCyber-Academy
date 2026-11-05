@@ -1,4 +1,5 @@
 import type { ContentStatus } from "./course";
+import type { Achievement } from "./achievement";
 
 /** Resumen del estado de la evaluación final de un curso para una persona. */
 export interface CourseFinalAssessmentSummary {
@@ -131,6 +132,7 @@ export interface StudentAssessmentResponse {
 /** Resultado inmediato tras enviar un intento. */
 export interface SubmitAssessmentResponse {
   results: StudentAssessmentResults;
+  newlyUnlocked?: Achievement[];
 }
 
 export interface SubmittedAnswer {

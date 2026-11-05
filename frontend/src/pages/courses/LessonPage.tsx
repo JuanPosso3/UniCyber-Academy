@@ -22,6 +22,7 @@ import {
   completeTheoryLessonRequest,
   getStudentLessonRequest,
 } from "../../services/lessons";
+import { useAchievementToast } from "../../context/AchievementToastContext";
 import type { StudentLessonResponse } from "../../types/lesson";
 import type { NavigateFn } from "../../types/navigation";
 
@@ -41,6 +42,7 @@ export function LessonPage({ courseId, lessonId, navigate }: LessonPageProps) {
   const [isCompleting, setIsCompleting] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const autoCompletedLessonRef = useRef<number | null>(null);
+  const { addToast } = useAchievementToast();
 
   useEffect(() => {
     let active = true;
@@ -80,7 +82,11 @@ export function LessonPage({ courseId, lessonId, navigate }: LessonPageProps) {
     setNotice(null);
 
     try {
-      await completeTheoryLessonRequest(courseId, lessonId);
+      const response = await completeTheoryLessonRequest(courseId, lessonId);
+      const newlyUnlocked = response.newlyUnlocked ?? [];
+      for (const achievement of newlyUnlocked) {
+        addToast(achievement);
+      }
       setNotice({
         variant: "success",
         message: "Lección completada. Tu progreso se actualizó.",
@@ -267,7 +273,11 @@ export function LessonPage({ courseId, lessonId, navigate }: LessonPageProps) {
                   courseId={courseId}
                   lessonId={lessonId}
                   completed={data.lesson.completed}
-                  onCompleted={() => {
+                  onCompleted={(response) => {
+                    const newlyUnlocked = response.newlyUnlocked ?? [];
+                    for (const achievement of newlyUnlocked) {
+                      addToast(achievement);
+                    }
                     setNotice({
                       variant: "success",
                       message:

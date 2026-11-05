@@ -48,6 +48,7 @@ model User {
 
   lessonProgress     LessonProgress[]
   assessmentAttempts AssessmentAttempt[]
+  achievements       UserAchievement[]
 }
 
 model Course {
@@ -181,4 +182,33 @@ model QuestionResponse {
   answerOption AnswerOption      @relation(fields: [answerOptionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([attemptId, questionId])
+}
+
+model Achievement {
+  id          Int           @id @default(autoincrement())
+  code        String        @unique
+  name        String
+  description String
+  category    String
+  icon        String
+  condition   String?
+  status      ContentStatus @default(ACTIVE)
+  order       Int
+  createdAt   TimestamptzString @default(now())
+  updatedAt   temporal.updatedAtString()
+
+  earnedBy UserAchievement[]
+}
+
+model UserAchievement {
+  id          Int   @id @default(autoincrement())
+  userId      Int
+  achievementId Int
+  earnedAt    TimestamptzString @default(now())
+  notifiedAt  TimestamptzString?
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@unique([userId, achievementId])
 }

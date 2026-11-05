@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.test.json --noEmit",
     "typecheck:web": "pnpm --filter unicyber-web typecheck",
     "typecheck:all": "pnpm typecheck && pnpm typecheck:web",
-    "test": "tsx --test test/course-management.test.ts test/lesson-learning.test.ts test/assessment.test.ts",
+    "test": "tsx --test test/course-management.test.ts test/lesson-learning.test.ts test/assessment.test.ts test/gamification.test.ts",
     "seed:academic": "tsx src/prisma/seed-academic-content.ts",
     "start": "node dist/server.js",
     "postinstall": "prisma skills sync || exit 0",
