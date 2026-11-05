@@ -21,6 +21,7 @@ import {
   type TheoryContent,
 } from '../../domain/lesson-content.js';
 import { AppError } from '../../infrastructure/http/errors.js';
+import { getCourseFinalAssessmentSummary } from '../assessments/assessment.service.js';
 import type { ModuleSummary } from '../courses/course.types.js';
 import type {
   ActivityCheckResponse,
@@ -62,7 +63,6 @@ const LAB_NOT_COMPLETED_MESSAGE =
   'Aún no has completado todas las actividades obligatorias.';
 const ACTIVITY_NOT_FOUND_MESSAGE =
   'La actividad no existe en este laboratorio.';
-const PASSING_SCORE = 70;
 
 interface CourseRow {
   id: number;
@@ -100,17 +100,6 @@ interface ProgressRow {
   userId: number;
   lessonId: number;
   completedAt: string;
-}
-
-interface AssessmentRow {
-  id: number;
-  moduleId: number | null;
-  status: ContentStatus;
-}
-
-interface AttemptRow {
-  assessmentId: number;
-  score: unknown;
 }
 
 function toCourseSummaryBase(course: CourseRow) {
@@ -778,33 +767,6 @@ async function buildLearningState(
     progressByLessonId.set(progress.lessonId, progress as ProgressRow);
   }
 
-  const assessments = await db.orm.public.Assessment
-    .where((assessment) => assessment.status.eq('ACTIVE'))
-    .all();
-  const moduleAssessments = new Map<number, AssessmentRow>();
-
-  for (const assessment of assessments) {
-    if (assessment.moduleId !== null && moduleIds.includes(assessment.moduleId)) {
-      moduleAssessments.set(assessment.moduleId, assessment as AssessmentRow);
-    }
-  }
-
-  const assessmentIds = [...moduleAssessments.values()].map(
-    (assessment) => assessment.id,
-  );
-  const attempts =
-    assessmentIds.length === 0
-      ? []
-      : await db.orm.public.AssessmentAttempt
-          .where({ userId })
-          .where((attempt) => attempt.assessmentId.in(assessmentIds))
-          .all();
-  const attemptsByAssessmentId = new Map<number, AttemptRow>();
-
-  for (const attempt of attempts) {
-    attemptsByAssessmentId.set(attempt.assessmentId, attempt as AttemptRow);
-  }
-
   const lessonsByModuleId = new Map<number, LessonRow[]>();
 
   for (const lesson of lessons) {
@@ -814,7 +776,6 @@ async function buildLearningState(
   }
 
   let previousModuleCompleted = true;
-  let previousAssessmentPassed = true;
   let completedLessons = 0;
   const learningModules: LearningModule[] = [];
 
@@ -825,17 +786,8 @@ async function buildLearningState(
     ).length;
     const moduleCompleted =
       moduleLessons.length === 0 || completedInModule === moduleLessons.length;
-    const assessment = moduleAssessments.get(module.id) ?? null;
-    const assessmentRequired = assessment !== null;
-    const attempt = assessment ? attemptsByAssessmentId.get(assessment.id) : null;
-    const assessmentPassed =
-      !assessmentRequired ||
-      (attempt !== undefined &&
-        attempt !== null &&
-        Number(attempt.score) >= PASSING_SCORE);
     const moduleUnlocked =
-      learningModules.length === 0 ||
-      (previousModuleCompleted && previousAssessmentPassed);
+      learningModules.length === 0 || previousModuleCompleted;
 
     const nextIncompleteIndex = moduleLessons.findIndex(
       (lesson) => !progressByLessonId.has(lesson.id),
@@ -868,19 +820,23 @@ async function buildLearningState(
       ...toModuleSummary(module as ModuleRow),
       locked: !moduleUnlocked,
       completed: moduleCompleted,
-      assessmentRequired,
-      assessmentPassed,
       lessons: learningLessons,
     });
 
     previousModuleCompleted = moduleCompleted;
-    previousAssessmentPassed = assessmentPassed;
   }
+
+  const courseFinalAssessment = await getCourseFinalAssessmentSummary(
+    courseId,
+    userId,
+    completedLessons === lessonIds.length,
+  );
 
   return {
     ...toCourseSummaryBase(course as CourseRow),
     moduleCount: modules.length,
     progress: buildProgressSummary(completedLessons, lessonIds.length),
+    assessment: courseFinalAssessment,
     modules: learningModules,
   };
 }
@@ -932,9 +888,6 @@ export async function getStudentLesson(
     learningLesson.moduleId,
     lessonId,
   );
-  const learningModule = learningCourse.modules.find(
-    (item) => item.id === learningLesson.moduleId,
-  );
 
   let content: StudentLesson['content'];
 
@@ -973,8 +926,6 @@ export async function getStudentLesson(
       id: module.id,
       title: module.title,
       order: module.order,
-      assessmentRequired: learningModule?.assessmentRequired ?? false,
-      assessmentPassed: learningModule?.assessmentPassed ?? false,
     },
     navigation: {
       previousLessonId: previousLesson?.id ?? null,

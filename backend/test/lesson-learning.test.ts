@@ -552,7 +552,11 @@ test(
       );
       assert.equal(beforeAssessment.body.course.modules[1]!.locked, false);
 
-      const assessment = await db.orm.public.Assessment.create({
+      // El aprendizaje ya no depende de evaluaciones por módulo: aun
+      // cuando exista una evaluación de módulo activa, el segundo
+      // módulo permanece desbloqueado y los campos del nivel de
+      // módulo desaparecen de la respuesta.
+      const legacyModuleAssessment = await db.orm.public.Assessment.create({
         title: 'Evaluación de recordar del módulo A',
         description: null,
         type: 'MODULE',
@@ -560,36 +564,26 @@ test(
         courseId: null,
         status: 'ACTIVE',
       });
-      assessmentId = assessment.id;
+      assessmentId = legacyModuleAssessment.id;
 
-      const blockedByAssessment = await requestJson<StudentCourseResponse>(
-        `/courses/${courseId}`,
-        { cookie: studentCookie },
-      );
-      assert.equal(blockedByAssessment.body.course.modules[1]!.locked, true);
+      const unblockedByLegacyAssessment =
+        await requestJson<StudentCourseResponse>(
+          `/courses/${courseId}`,
+          { cookie: studentCookie },
+        );
       assert.equal(
-        blockedByAssessment.body.course.modules[0]!.assessmentRequired,
-        true,
-      );
-      assert.equal(
-        blockedByAssessment.body.course.modules[0]!.assessmentPassed,
+        unblockedByLegacyAssessment.body.course.modules[1]!.locked,
         false,
       );
-
-      await db.orm.public.AssessmentAttempt.create({
-        userId: studentId!,
-        assessmentId: assessment.id,
-        score: 80 as never,
-      });
-
-      const unlockedByAssessment = await requestJson<StudentCourseResponse>(
-        `/courses/${courseId}`,
-        { cookie: studentCookie },
-      );
-      assert.equal(unlockedByAssessment.body.course.modules[1]!.locked, false);
       assert.equal(
-        unlockedByAssessment.body.course.modules[0]!.assessmentPassed,
-        true,
+        'assessmentRequired' in
+          unblockedByLegacyAssessment.body.course.modules[0]!,
+        false,
+      );
+      assert.equal(
+        'assessmentPassed' in
+          unblockedByLegacyAssessment.body.course.modules[0]!,
+        false,
       );
 
       const labLesson = await requestJson<StudentLessonResponse>(

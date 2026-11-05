@@ -11,6 +11,8 @@ import {
   parseRoute,
 } from "./lib/routes";
 import { AdminCoursesPage } from "./pages/admin/AdminCoursesPage";
+import { AdminAssessmentEditorPage } from "./pages/admin/AdminAssessmentEditorPage";
+import { AdminAssessmentPage } from "./pages/admin/AdminAssessmentPage";
 import { CourseFormPage } from "./pages/admin/CourseFormPage";
 import { CourseLessonsPage } from "./pages/admin/CourseLessonsPage";
 import { CourseModulesPage } from "./pages/admin/CourseModulesPage";
@@ -19,6 +21,8 @@ import { LessonPreviewPage } from "./pages/admin/LessonPreviewPage";
 import { ModuleFormPage } from "./pages/admin/ModuleFormPage";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
+import { AssessmentPage } from "./pages/courses/AssessmentPage";
+import { AssessmentResultsPage } from "./pages/courses/AssessmentResultsPage";
 import { CourseDetailPage } from "./pages/courses/CourseDetailPage";
 import { CoursesPage } from "./pages/courses/CoursesPage";
 import { LessonPage } from "./pages/courses/LessonPage";
@@ -241,6 +245,38 @@ function AppContent() {
           courseId={route.courseId}
           moduleId={route.moduleId}
           lessonId={route.lessonId}
+          navigate={navigate}
+        />
+      );
+
+    case "admin-assessment":
+      return (
+        <AdminAssessmentPage
+          courseId={route.courseId}
+          navigate={navigate}
+        />
+      );
+
+    case "admin-assessment-edit":
+      return (
+        <AdminAssessmentEditorPage
+          courseId={route.courseId}
+          navigate={navigate}
+        />
+      );
+
+    case "assessment":
+      return (
+        <AssessmentPage
+          courseId={route.courseId}
+          navigate={navigate}
+        />
+      );
+
+    case "assessment-results":
+      return (
+        <AssessmentResultsPage
+          courseId={route.courseId}
           navigate={navigate}
         />
       );

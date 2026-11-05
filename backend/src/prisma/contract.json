@@ -1012,6 +1012,20 @@
                   "kind": "scalar"
                 }
               },
+              "explanation": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "hint": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -1122,6 +1136,12 @@
                 },
                 "createdAt": {
                   "column": "createdAt"
+                },
+                "explanation": {
+                  "column": "explanation"
+                },
+                "hint": {
+                  "column": "hint"
                 },
                 "id": {
                   "column": "id"
@@ -2147,6 +2167,16 @@
                   "nativeType": "timestamptz",
                   "nullable": false
                 },
+                "explanation": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "hint": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "id": {
                   "codecId": "pg/int4@1",
                   "default": {
@@ -2518,7 +2548,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "1fd3815e02989b0d4c9a59d3f615e490776c2ad62422db5ed523fd3e44572172"
+    "storageHash": "d5be31c6520dd996597c1e6b48d169aebd44c86fa52b6c6ff7696feb2a376317"
   },
   "execution": {
     "executionHash": "b437da8b8ac02e87ef9ddde1d30e75b781ef71fbf2ae601187963ab145ed8bac",

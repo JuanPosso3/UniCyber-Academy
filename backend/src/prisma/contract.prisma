@@ -120,6 +120,8 @@ model Question {
   type         QuestionType
   order        Int
   status       ContentStatus @default(DRAFT)
+  explanation  String?
+  hint         String?
   createdAt    TimestamptzString @default(now())
   updatedAt    temporal.updatedAtString()
 
