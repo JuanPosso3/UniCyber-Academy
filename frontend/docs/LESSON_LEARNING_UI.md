@@ -105,6 +105,7 @@ Text is rendered through `InlineText`, which supports limited inline emphasis an
 - `ORDER_PROCEDURE`: reorder items with up/down controls.
 - `CHAINED`: groups child activities and preserves per-child solved state.
 - `TERMINAL`: simulated terminal with command history and a command list.
+- `EMAIL_ANALYSIS`: simulated email with direct selection of suspicious parts.
 
 ### 6.3 Terminal
 
@@ -117,6 +118,20 @@ The terminal:
 - Marks the activity complete when the required commands have been executed.
 
 No command is executed on the user's machine.
+
+### 6.4 Email analysis
+
+`EmailAnalysisActivityView` renders a fictional message inside a custom email-client layout:
+
+- Header rows (sender, recipient, subject, date), greeting, body paragraphs, CTA-style link with its simulated URL, closing, signature, and confidentiality note.
+- Optional educational disclaimer rendered below the message, outside the evaluated content.
+- Every selectable part is a toggle button (`aria-pressed`) with an accessible label taken from the activity `elements`; selecting it shows a subtle accent highlight and a check icon.
+- Parts without `elementId` are rendered as plain text and cannot be selected.
+- Link URLs are plain text; nothing navigates, sends mail, or requests credentials.
+- A counter shows the number of selected elements; the check button and hints come from `ActivityFrame`.
+- Validation happens on the backend; the selected set is sent as `{ elementIds: [...] }` and wrong attempts only receive a general message.
+
+The layout is responsive: header rows stack on narrow screens and selectable regions keep large touch areas on mobile.
 
 ## 7. Administrative lesson editor
 

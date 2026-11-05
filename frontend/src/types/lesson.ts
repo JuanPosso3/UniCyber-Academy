@@ -93,7 +93,8 @@ export type LabActivityType =
   | "DECISION_STEPS"
   | "ORDER_PROCEDURE"
   | "CHAINED"
-  | "TERMINAL";
+  | "TERMINAL"
+  | "EMAIL_ANALYSIS";
 
 export interface LabOption {
   id: string;
@@ -168,6 +169,51 @@ export interface TerminalActivity extends LabActivityBase {
   solution?: { requiredCommands: string[] };
 }
 
+export interface EmailAnalysisElement {
+  id: string;
+  /** Etiqueta accesible que describe la parte del correo. */
+  text: string;
+}
+
+export interface EmailAnalysisParagraph {
+  text: string;
+  /** Si se define, el párrafo se puede marcar como sospechoso. */
+  elementId?: string;
+}
+
+export interface EmailAnalysisEmail {
+  fromName: string;
+  fromAddress: string;
+  /** Parte seleccionable completa del remitente. */
+  fromElementId?: string;
+  toAddress: string;
+  toElementId?: string;
+  subject: string;
+  subjectElementId?: string;
+  datetime: string;
+  datetimeElementId?: string;
+  greeting?: string;
+  greetingElementId?: string;
+  body: EmailAnalysisParagraph[];
+  linkLabel?: string;
+  linkUrl?: string;
+  linkElementId?: string;
+  closingLines?: string[];
+  closingElementId?: string;
+  signatureLines?: string[];
+  signatureElementId?: string;
+  confidentialityNote?: string;
+  /** Nota educativa que no forma parte del correo evaluado. */
+  disclaimer?: string;
+}
+
+export interface EmailAnalysisActivity extends LabActivityBase {
+  type: "EMAIL_ANALYSIS";
+  email: EmailAnalysisEmail;
+  elements: EmailAnalysisElement[];
+  solution?: { elementIds: string[] };
+}
+
 export type LabActivity =
   | SingleChoiceActivity
   | IdentifySuspiciousActivity
@@ -175,7 +221,8 @@ export type LabActivity =
   | DecisionStepsActivity
   | OrderProcedureActivity
   | ChainedActivity
-  | TerminalActivity;
+  | TerminalActivity
+  | EmailAnalysisActivity;
 
 export interface LabContent {
   schemaVersion: 1;

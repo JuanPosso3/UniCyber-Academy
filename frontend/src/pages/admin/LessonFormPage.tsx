@@ -95,6 +95,60 @@ const LAB_TEMPLATE = {
       ],
       solution: { requiredCommands: ["ayuda"] },
     },
+    {
+      id: "correo-sospechoso",
+      type: "EMAIL_ANALYSIS",
+      title: "Analiza el correo sospechoso",
+      instructions:
+        "Selecciona directamente sobre el correo las partes sospechosas. También hay partes legítimas que no debes marcar.",
+      required: true,
+      hints: [
+        "Presta atención al dominio utilizado por quien envía el mensaje.",
+      ],
+      email: {
+        fromName: "Soporte del sitio",
+        fromAddress: "soporte@sitio-ejemplo.example.com",
+        fromElementId: "remitente",
+        toAddress: "usuario@sitio-ejemplo.example.com",
+        toElementId: "destinatario",
+        subject: "URGENTE: verifica tus credenciales",
+        subjectElementId: "asunto",
+        datetime: "miércoles, 4 de noviembre de 2026, 10:00 a. m.",
+        datetimeElementId: "fecha",
+        greeting: "Hola usuario:",
+        greetingElementId: "saludo",
+        body: [
+          {
+            text: "Detectamos un problema en tu cuenta y debemos verificar tus credenciales.",
+            elementId: "credenciales",
+          },
+          {
+            text: "Gracias por tu atención.",
+          },
+        ],
+        linkLabel: "VERIFICAR AHORA",
+        linkUrl: "http://sitio-ejemplo.example.com/verificar",
+        linkElementId: "enlace",
+        closingLines: ["Equipo de soporte."],
+        closingElementId: "cierre",
+        signatureLines: ["Departamento de soporte simulado"],
+        signatureElementId: "firma",
+        disclaimer:
+          "Ejemplo ficticio para practicar. Ajusta el correo y los elementos a tu escenario real.",
+      },
+      elements: [
+        { id: "remitente", text: "Datos del remitente" },
+        { id: "destinatario", text: "Destinatario del mensaje" },
+        { id: "asunto", text: "Línea de asunto" },
+        { id: "fecha", text: "Fecha y hora de envío" },
+        { id: "saludo", text: "Saludo inicial" },
+        { id: "credenciales", text: "Solicitud de credenciales" },
+        { id: "enlace", text: "Enlace de verificación" },
+        { id: "cierre", text: "Cierre del mensaje" },
+        { id: "firma", text: "Firma del mensaje" },
+      ],
+      solution: { elementIds: ["remitente", "asunto", "credenciales", "enlace"] },
+    },
   ],
 };
 

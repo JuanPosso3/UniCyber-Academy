@@ -35,7 +35,7 @@ Each course has three modules. Each module has two theory lessons. The laborator
 | Identificación de correos y sitios fraudulentos | Cómo identificar un correo electrónico falso; Identificación de páginas web fraudulentas |
 | Prevención y actuación frente al phishing | Buenas prácticas para prevenir ataques de phishing; Qué hacer cuando recibimos un correo sospechoso |
 
-Laboratory: **Detectives del phishing**.
+Laboratory: **Detectives del phishing**. It contains four activities: the original three exercises plus the mandatory simulation **Analiza el correo sospechoso** (`EMAIL_ANALYSIS`), where the student inspects a fictional institutional email within a simulated email client and marks its suspicious parts directly on the message (sender address, urgent subject, suspension warning, credential request, verification link, and generic signature). Legitimate parts (greeting, recipient, date, closing) must not be marked; attempts and hints follow the general laboratory rules.
 
 ### Course 2: Gestión de contraseñas y autenticación
 

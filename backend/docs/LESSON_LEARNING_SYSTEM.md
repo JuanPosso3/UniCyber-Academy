@@ -68,10 +68,19 @@ Activity types:
 - `ORDER_PROCEDURE`
 - `CHAINED`
 - `TERMINAL`
+- `EMAIL_ANALYSIS`
 
 Each leaf activity has an `id`, `title`, `instructions`, optional `required`, optional `hints`, and a `solution` object. Activity solutions are stored in the lesson JSON for administrative preview and are removed from student responses by `sanitizeLabContent`.
 
 Terminal activities are simulated. They contain a whitelist of commands and their outputs. No command is executed on the host or on a real system.
+
+Email analysis activities simulate a fictional email inside the laboratory. The activity defines:
+
+- `email`: the rendered message (`fromName`, `fromAddress`, `toAddress`, `subject`, `datetime`, optional `greeting`, `body` paragraphs, optional `linkLabel`/`linkUrl`, `closingLines`, `signatureLines`, `confidentialityNote`, and an educational `disclaimer`).
+- `elements`: the selectable parts of the email, each with an `id` and an accessible `text` label. Every part of the email referenced with an `*ElementId` must exist in `elements`, each element can be referenced at most once, and every defined element must be referenced somewhere.
+- `solution.elementIds`: the identifiers of the suspicious elements. The student toggles parts directly on the email and sends `{ elementIds: [...] }`; the backend compares the selected set with the solution. Did not match the full set, or selecting legitimate elements, returns a general failure without revealing which elements were missed.
+
+Email links must use `http` or `https` with a reserved example domain (`example.com`, `example.net`, `example.org`, or subdomains), so no real navigation or delivery is possible. The solution must not mark every element as suspicious: at least one legitimate element is required so students must discriminate.
 
 ## 3. Server-side rules
 
@@ -210,6 +219,7 @@ The seed:
 - Validates all content before writing anything.
 - Creates missing courses, modules, lessons, and module assessments.
 - Preserves existing records with the same title and module.
+- Refreshes an existing seeded lesson when its source content changed and no `LessonProgress` exists; lessons with student progress are left untouched and reported as locked by progress.
 - Creates lessons with `status = DRAFT`.
 - Creates module assessments with `status = DRAFT` and no questions.
 - Merges the source-level laboratory module into the third module so the database has 15 modules, 30 theory lessons, and 5 laboratories.
@@ -243,6 +253,7 @@ The test suite covers:
 - Direct access rejection for locked lessons.
 - Theory completion and progress calculation.
 - Laboratory answer validation.
+- Email analysis validation (invalid references, full-suspicion solutions, non-example link domains, wrong selections, exact-match completion, and finalization gating).
 - Solution stripping from student responses.
 - Simulated terminal commands.
 - Finalization requirements.

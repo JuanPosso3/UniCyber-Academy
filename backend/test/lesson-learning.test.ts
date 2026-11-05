@@ -235,6 +235,80 @@ function laboratoryContent() {
   };
 }
 
+function emailLabContent() {
+  return {
+    schemaVersion: 1,
+    introduction: 'Laboratorio con simulación de correo de prueba.',
+    objective: 'Identificar los elementos sospechosos de un correo simulado.',
+    scenario: 'Recibes un correo de soporte con varios indicadores de riesgo.',
+    activities: [
+      {
+        id: 'choice',
+        type: 'SINGLE_CHOICE',
+        title: 'Decisión previa',
+        instructions: 'Selecciona la opción correcta.',
+        required: true,
+        options: [
+          { id: 'a', text: 'Opción incorrecta' },
+          { id: 'b', text: 'Opción correcta' },
+        ],
+        solution: { optionId: 'b' },
+      },
+      {
+        id: 'correo',
+        type: 'EMAIL_ANALYSIS',
+        title: 'Analiza el correo sospechoso',
+        instructions: 'Selecciona los elementos sospechosos del correo.',
+        required: true,
+        hints: ['Una pista de prueba del correo.'],
+        email: {
+          fromName: 'Soporte del sitio',
+          fromAddress: 'soporte@sitio-prueba.example.com',
+          fromElementId: 'remitente',
+          toAddress: 'estudiante@institucion.example.com',
+          toElementId: 'destinatario',
+          subject: 'URGENTE: verifica tu cuenta',
+          subjectElementId: 'asunto',
+          datetime: 'lunes, 2 de noviembre de 2026, 8:00 a. m.',
+          datetimeElementId: 'fecha',
+          greeting: 'Hola:',
+          greetingElementId: 'saludo',
+          body: [
+            {
+              text: 'Debes verificar tus credenciales ahora mismo.',
+              elementId: 'credenciales',
+            },
+            { text: 'Este es un párrafo legítimo del mensaje.' },
+          ],
+          linkLabel: 'VERIFICAR AHORA',
+          linkUrl: 'http://sitio-prueba.example.com/verificar',
+          linkElementId: 'enlace',
+          closingLines: ['Gracias.'],
+          closingElementId: 'cierre',
+          signatureLines: ['Equipo de soporte'],
+          signatureElementId: 'firma',
+          disclaimer: 'Contenido ficticio con fines educativos.',
+        },
+        elements: [
+          { id: 'remitente', text: 'Datos del remitente' },
+          { id: 'destinatario', text: 'Destinatario del mensaje' },
+          { id: 'asunto', text: 'Línea de asunto' },
+          { id: 'fecha', text: 'Fecha y hora de envío' },
+          { id: 'saludo', text: 'Saludo inicial' },
+          { id: 'credenciales', text: 'Solicitud de credenciales' },
+          { id: 'enlace', text: 'Enlace de verificación' },
+          { id: 'cierre', text: 'Cierre del mensaje' },
+          { id: 'firma', text: 'Firma del mensaje' },
+        ],
+        solution: {
+          elementIds: ['remitente', 'asunto', 'credenciales', 'enlace', 'firma'],
+        },
+      },
+    ],
+  };
+}
+
+
 test(
   'flujo de lecciones, desbloqueo, laboratorio y progreso',
   { timeout: 40000 },
@@ -701,6 +775,325 @@ test(
 
       await db.orm.public.User.where({ email: adminEmail }).deleteAll();
       await db.orm.public.User.where({ email: studentEmail }).deleteAll();
+    }
+  },
+);
+
+test(
+  'actividad de análisis de correo simulado en el laboratorio',
+  { timeout: 40000 },
+  async () => {
+    let server: ReturnType<ReturnType<typeof createApp>['listen']> | null =
+      null;
+    let courseId: number | null = null;
+    let studentId: number | null = null;
+
+    const emailTestMarker = `prueba-correo-${Date.now()}`;
+    const emailAdminEmail = `${emailTestMarker}-admin@example.com`;
+    const emailStudentEmail = `${emailTestMarker}-student@example.com`;
+
+    try {
+      const passwordHash = await hashPassword(TEST_PASSWORD);
+
+      await db.orm.public.User.create({
+        firstName: 'Admin',
+        lastName: 'Correo',
+        email: emailAdminEmail,
+        passwordHash,
+        role: 'ADMINISTRATIVE',
+        status: 'ACTIVE',
+      });
+
+      const student = await db.orm.public.User.create({
+        firstName: 'Estudiante',
+        lastName: 'Correo',
+        email: emailStudentEmail,
+        passwordHash,
+        role: 'STUDENT',
+        status: 'ACTIVE',
+      });
+      studentId = student.id;
+
+      const app = createApp();
+      server = app.listen(0);
+      await new Promise<void>((resolve, reject) => {
+        server?.once('listening', resolve);
+        server?.once('error', reject);
+      });
+
+      const address = server.address() as AddressInfo;
+      baseUrl = `http://127.0.0.1:${address.port}/api`;
+
+      const adminCookie = await login(emailAdminEmail);
+      const studentCookie = await login(emailStudentEmail);
+
+      const course = await requestJson<CourseResponse>('/admin/courses', {
+        cookie: adminCookie,
+        method: 'POST',
+        body: {
+          title: 'Curso de correo',
+          description: 'Curso de prueba del análisis de correo.',
+        },
+      });
+      assert.equal(course.status, 201);
+      courseId = course.body.course.id;
+
+      const moduleA = await requestJson<ModuleResponse>(
+        `/admin/courses/${courseId}/modules`,
+        {
+          cookie: adminCookie,
+          method: 'POST',
+          body: { title: 'Módulo de correo', description: null },
+        },
+      );
+      assert.equal(moduleA.status, 201);
+      const moduleId = moduleA.body.module.id;
+
+      // Solución con un identificador inexistente.
+      const invalidSolution = structuredClone(
+        emailLabContent() as unknown,
+      ) as {
+        activities: [
+          Record<string, unknown>,
+          { solution: { elementIds: string[] } },
+        ];
+      };
+      invalidSolution.activities[1]!.solution.elementIds = ['remitente', 'no-existe'];
+      const invalidResponse = await requestJson<ApiErrorResponse>(
+        `/admin/courses/${courseId}/modules/${moduleId}/lessons`,
+        {
+          cookie: adminCookie,
+          method: 'POST',
+          body: {
+            title: 'Laboratorio inválido',
+            type: 'LABORATORY',
+            content: invalidSolution,
+          },
+        },
+      );
+      assert.equal(invalidResponse.status, 400);
+      assert.equal(invalidResponse.body.error.code, 'INVALID_CONTENT');
+
+      // Solución que marca todos los elementos como sospechosos.
+      const fullSolution = structuredClone(emailLabContent() as unknown) as {
+        activities: [
+          Record<string, unknown>,
+          { solution: { elementIds: string[] } },
+        ];
+      };
+      fullSolution.activities[1]!.solution.elementIds = [
+        'remitente',
+        'destinatario',
+        'asunto',
+        'fecha',
+        'saludo',
+        'credenciales',
+        'enlace',
+        'cierre',
+        'firma',
+      ];
+      const fullResponse = await requestJson<ApiErrorResponse>(
+        `/admin/courses/${courseId}/modules/${moduleId}/lessons`,
+        {
+          cookie: adminCookie,
+          method: 'POST',
+          body: {
+            title: 'Laboratorio inválido 2',
+            type: 'LABORATORY',
+            content: fullSolution,
+          },
+        },
+      );
+      assert.equal(fullResponse.status, 400);
+      assert.equal(fullResponse.body.error.code, 'INVALID_CONTENT');
+
+      // Enlace fuera de los dominios de ejemplo reservados.
+      const realDomain = structuredClone(
+        emailLabContent() as unknown,
+      ) as {
+        activities: [
+          Record<string, unknown>,
+          { email: { linkUrl?: string } },
+        ];
+      };
+      realDomain.activities[1]!.email.linkUrl = 'https://sitio-real.com/verificar';
+      const realResponse = await requestJson<ApiErrorResponse>(
+        `/admin/courses/${courseId}/modules/${moduleId}/lessons`,
+        {
+          cookie: adminCookie,
+          method: 'POST',
+          body: {
+            title: 'Laboratorio inválido 3',
+            type: 'LABORATORY',
+            content: realDomain,
+          },
+        },
+      );
+      assert.equal(realResponse.status, 400);
+      assert.equal(realResponse.body.error.code, 'INVALID_CONTENT');
+
+      const validLab = await requestJson<LessonResponse>(
+        `/admin/courses/${courseId}/modules/${moduleId}/lessons`,
+        {
+          cookie: adminCookie,
+          method: 'POST',
+          body: {
+            title: 'Laboratorio con correo',
+            type: 'LABORATORY',
+            content: emailLabContent(),
+          },
+        },
+      );
+      assert.equal(validLab.status, 201);
+      const labId = validLab.body.lesson.id;
+
+      const activation = await requestJson<LessonResponse>(
+        `/admin/courses/${courseId}/modules/${moduleId}/lessons/${labId}/status`,
+        {
+          cookie: adminCookie,
+          method: 'PATCH',
+          body: { status: 'ACTIVE' },
+        },
+      );
+      assert.equal(activation.status, 200);
+
+      const moduleActivation = await requestJson<ModuleResponse>(
+        `/admin/courses/${courseId}/modules/${moduleId}/status`,
+        { cookie: adminCookie, method: 'PATCH', body: { status: 'ACTIVE' } },
+      );
+      assert.equal(moduleActivation.status, 200);
+
+      const courseActivation = await requestJson<CourseResponse>(
+        `/admin/courses/${courseId}/status`,
+        { cookie: adminCookie, method: 'PATCH', body: { status: 'ACTIVE' } },
+      );
+      assert.equal(courseActivation.status, 200);
+
+      // El contenido del estudiante no incluye la solución.
+      const studentLesson = await requestJson<StudentLessonResponse>(
+        `/courses/${courseId}/lessons/${labId}`,
+        { cookie: studentCookie },
+      );
+      assert.equal(studentLesson.status, 200);
+      const studentContent = JSON.stringify(studentLesson.body.lesson.content);
+      assert.ok(!studentContent.includes('"solution"'));
+
+      const labUrl = `/courses/${courseId}/lessons/${labId}/activities/correo/check`;
+
+      // Respuesta incompleta: falta un elemento sospechoso.
+      const incomplete = await requestJson<ActivityCheckResponse>(labUrl, {
+        cookie: studentCookie,
+        method: 'POST',
+        body: {
+          answer: {
+            elementIds: ['remitente', 'asunto', 'credenciales', 'enlace'],
+          },
+        },
+      });
+      assert.equal(incomplete.status, 200);
+      assert.equal(incomplete.body.correct, false);
+
+      // Respuesta errónea: incluye elementos legítimos.
+      const withLegitimate = await requestJson<ActivityCheckResponse>(labUrl, {
+        cookie: studentCookie,
+        method: 'POST',
+        body: {
+          answer: {
+            elementIds: [
+              'remitente',
+              'asunto',
+              'credenciales',
+              'enlace',
+              'firma',
+              'saludo',
+            ],
+          },
+        },
+      });
+      assert.equal(withLegitimate.status, 200);
+      assert.equal(withLegitimate.body.correct, false);
+
+      // Respuesta correcta exacta.
+      const correct = await requestJson<ActivityCheckResponse>(labUrl, {
+        cookie: studentCookie,
+        method: 'POST',
+        body: {
+          answer: {
+            elementIds: [
+              'remitente',
+              'asunto',
+              'credenciales',
+              'enlace',
+              'firma',
+            ],
+          },
+        },
+      });
+      assert.equal(correct.status, 200);
+      assert.equal(correct.body.correct, true);
+
+      // El laboratorio no se finaliza sin la actividad del correo.
+      const blockedFinalize = await requestJson<ApiErrorResponse>(
+        `/courses/${courseId}/lessons/${labId}/finalize`,
+        {
+          cookie: studentCookie,
+          method: 'POST',
+          body: { answers: { choice: { optionId: 'b' } } },
+        },
+      );
+      assert.equal(blockedFinalize.status, 422);
+      assert.equal(blockedFinalize.body.error.code, 'LAB_NOT_COMPLETED');
+
+      const finalized = await requestJson<CompletionResponse>(
+        `/courses/${courseId}/lessons/${labId}/finalize`,
+        {
+          cookie: studentCookie,
+          method: 'POST',
+          body: {
+            answers: {
+              choice: { optionId: 'b' },
+              correo: {
+                elementIds: [
+                  'remitente',
+                  'asunto',
+                  'credenciales',
+                  'enlace',
+                  'firma',
+                ],
+              },
+            },
+          },
+        },
+      );
+      assert.equal(finalized.status, 200);
+      assert.equal(finalized.body.progress.percentage, 100);
+    } finally {
+      if (server) {
+        await new Promise<void>((resolve) => {
+          server?.close(() => resolve());
+        });
+      }
+
+      if (studentId !== null) {
+        await db.orm.public.LessonProgress.where({ userId: studentId }).deleteAll();
+      }
+
+      if (courseId !== null) {
+        const modules = await db.orm.public.Module.where({ courseId }).all();
+        const moduleIds = modules.map((module) => module.id);
+
+        if (moduleIds.length > 0) {
+          await db.orm.public.Lesson
+            .where((lesson) => lesson.moduleId.in(moduleIds))
+            .deleteAll();
+        }
+
+        await db.orm.public.Module.where({ courseId }).deleteAll();
+        await db.orm.public.Course.where({ id: courseId }).deleteAll();
+      }
+
+      await db.orm.public.User.where({ email: emailAdminEmail }).deleteAll();
+      await db.orm.public.User.where({ email: emailStudentEmail }).deleteAll();
       await db.close();
     }
   },

@@ -103,6 +103,7 @@ export const LAB_ACTIVITY_TYPES = [
   'ORDER_PROCEDURE',
   'CHAINED',
   'TERMINAL',
+  'EMAIL_ANALYSIS',
 ] as const;
 
 export type LabActivityType = (typeof LAB_ACTIVITY_TYPES)[number];
@@ -180,6 +181,51 @@ export interface TerminalActivity extends LabActivityBase {
   solution: { requiredCommands: string[] };
 }
 
+export interface EmailAnalysisElement {
+  id: string;
+  /** Etiqueta accesible que describe la parte del correo. */
+  text: string;
+}
+
+export interface EmailAnalysisParagraph {
+  text: string;
+  /** Si se define, el párrafo se puede marcar como sospechoso. */
+  elementId?: string;
+}
+
+export interface EmailAnalysisEmail {
+  fromName: string;
+  fromAddress: string;
+  /** Parte seleccionable completa del remitente. */
+  fromElementId?: string;
+  toAddress: string;
+  toElementId?: string;
+  subject: string;
+  subjectElementId?: string;
+  datetime: string;
+  datetimeElementId?: string;
+  greeting?: string;
+  greetingElementId?: string;
+  body: EmailAnalysisParagraph[];
+  linkLabel?: string;
+  linkUrl?: string;
+  linkElementId?: string;
+  closingLines?: string[];
+  closingElementId?: string;
+  signatureLines?: string[];
+  signatureElementId?: string;
+  confidentialityNote?: string;
+  /** Nota educativa que no forma parte del correo evaluado. */
+  disclaimer?: string;
+}
+
+export interface EmailAnalysisActivity extends LabActivityBase {
+  type: 'EMAIL_ANALYSIS';
+  email: EmailAnalysisEmail;
+  elements: EmailAnalysisElement[];
+  solution: { elementIds: string[] };
+}
+
 export type LabActivity =
   | SingleChoiceActivity
   | IdentifySuspiciousActivity
@@ -187,7 +233,8 @@ export type LabActivity =
   | DecisionStepsActivity
   | OrderProcedureActivity
   | ChainedActivity
-  | TerminalActivity;
+  | TerminalActivity
+  | EmailAnalysisActivity;
 
 export interface LabContent {
   schemaVersion: 1;
@@ -862,6 +909,177 @@ function validateSolutionIds(
   });
 }
 
+const RESERVED_EXAMPLE_HOSTS = [
+  'example.com',
+  'example.net',
+  'example.org',
+  'example',
+] as const;
+
+function isReservedExampleHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/\.$/, '');
+
+  return (
+    (RESERVED_EXAMPLE_HOSTS as readonly string[]).includes(host) ||
+    RESERVED_EXAMPLE_HOSTS.some((reserved) => host.endsWith(`.${reserved}`))
+  );
+}
+
+function validateEmailAddress(
+  value: unknown,
+  path: string,
+  issues: ContentValidationIssue[],
+  identifiers: { activityId?: string } = {},
+): void {
+  const text = validateRequiredString(
+    value,
+    path,
+    issues,
+    MAX_SHORT_TEXT_LENGTH,
+    identifiers,
+  );
+
+  if (!text) {
+    return;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
+    addIssue(
+      issues,
+      path,
+      'INVALID_VALUE',
+      'La dirección de correo no tiene un formato válido.',
+      identifiers,
+    );
+  }
+}
+
+function validateEmailAnalysisLink(
+  label: unknown,
+  url: unknown,
+  path: string,
+  issues: ContentValidationIssue[],
+  identifiers: { activityId?: string } = {},
+): void {
+  const hasLabel = label !== undefined;
+  const hasUrl = url !== undefined;
+
+  if (hasLabel !== hasUrl) {
+    addIssue(
+      issues,
+      hasLabel ? `${path}.linkLabel` : `${path}.linkUrl`,
+      'INVALID_VALUE',
+      'El enlace de la simulación requiere texto y URL al mismo tiempo.',
+      identifiers,
+    );
+  }
+
+  if (!hasUrl) {
+    return;
+  }
+
+  const text = validateRequiredString(
+    url,
+    `${path}.linkUrl`,
+    issues,
+    MAX_SHORT_TEXT_LENGTH,
+    identifiers,
+  );
+
+  if (!text) {
+    return;
+  }
+
+  try {
+    const parsed = new URL(text);
+
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      addIssue(
+        issues,
+        `${path}.linkUrl`,
+        'INVALID_URL',
+        'El enlace debe utilizar http o https.',
+        identifiers,
+      );
+    } else if (!isReservedExampleHost(parsed.hostname)) {
+      addIssue(
+        issues,
+        `${path}.linkUrl`,
+        'INVALID_URL',
+        'El enlace debe usar un dominio de ejemplo reservado (example.com o subdominios de example.com, example.net u example.org).',
+        identifiers,
+      );
+    }
+  } catch {
+    addIssue(
+      issues,
+      `${path}.linkUrl`,
+      'INVALID_URL',
+      'El enlace no tiene un formato válido.',
+      identifiers,
+    );
+  }
+}
+
+interface EmailAnalysisReferenceContext {
+  validIds: Set<string> | null;
+  references: Map<string, Set<string>>;
+}
+
+function validateEmailAnalysisElementId(
+  value: unknown,
+  path: string,
+  issues: ContentValidationIssue[],
+  activityId: string | undefined,
+  context: EmailAnalysisReferenceContext,
+  region: string,
+): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    addIssue(
+      issues,
+      path,
+      'INVALID_TYPE',
+      'La referencia al elemento seleccionable debe ser un identificador.',
+      { activityId },
+    );
+    return;
+  }
+
+  if (context.validIds === null) {
+    return;
+  }
+
+  if (!context.validIds.has(value)) {
+    addIssue(
+      issues,
+      path,
+      'INVALID_REFERENCE',
+      'La parte del correo debe referenciar un elemento definido en la actividad.',
+      { activityId },
+    );
+  }
+
+  for (const otherRegion of context.references.get(value) ?? []) {
+    if (otherRegion !== region) {
+      addIssue(
+        issues,
+        path,
+        'DUPLICATE_ID',
+        `Cada elemento solo puede estar asociado a una parte del correo (también lo usa «${otherRegion}»).`,
+        { activityId },
+      );
+    }
+  }
+
+  const regions = context.references.get(value) ?? new Set<string>();
+  regions.add(region);
+  context.references.set(value, regions);
+}
+
 function validateActivity(
   value: unknown,
   path: string,
@@ -1369,6 +1587,361 @@ function validateActivity(
       }
       break;
     }
+
+    case 'EMAIL_ANALYSIS': {
+      const email = value['email'];
+
+      if (!isRecord(email)) {
+        addIssue(
+          issues,
+          `${path}.email`,
+          'INVALID_TYPE',
+          'El correo simulado es obligatorio.',
+          identifiers,
+        );
+        break;
+      }
+
+      validateRequiredString(
+        email['fromName'],
+        `${path}.email.fromName`,
+        issues,
+        MAX_SHORT_TEXT_LENGTH,
+        identifiers,
+      );
+      validateEmailAddress(
+        email['fromAddress'],
+        `${path}.email.fromAddress`,
+        issues,
+        identifiers,
+      );
+      validateEmailAddress(
+        email['toAddress'],
+        `${path}.email.toAddress`,
+        issues,
+        identifiers,
+      );
+      validateRequiredString(
+        email['subject'],
+        `${path}.email.subject`,
+        issues,
+        MAX_OPTION_TEXT_LENGTH,
+        identifiers,
+      );
+      validateRequiredString(
+        email['datetime'],
+        `${path}.email.datetime`,
+        issues,
+        MAX_SHORT_TEXT_LENGTH,
+        identifiers,
+      );
+      validateOptionalString(
+        email['greeting'],
+        `${path}.email.greeting`,
+        issues,
+        MAX_OPTION_TEXT_LENGTH,
+        identifiers,
+      );
+      validateEmailAnalysisLink(
+        email['linkLabel'],
+        email['linkUrl'],
+        path,
+        issues,
+        identifiers,
+      );
+      validateOptionalString(
+        email['confidentialityNote'],
+        `${path}.email.confidentialityNote`,
+        issues,
+        MAX_OPTION_TEXT_LENGTH,
+        identifiers,
+      );
+      validateOptionalString(
+        email['disclaimer'],
+        `${path}.email.disclaimer`,
+        issues,
+        MAX_SHORT_TEXT_LENGTH,
+        identifiers,
+      );
+
+      for (const field of ['closingLines', 'signatureLines'] as const) {
+        const lines = email[field];
+
+        if (lines === undefined) {
+          continue;
+        }
+
+        validateStringArray(lines, `${path}.email.${field}`, issues, {
+          min: 1,
+          max: 6,
+          maxLength: MAX_OPTION_TEXT_LENGTH,
+          identifiers,
+        });
+      }
+
+      if (!Array.isArray(email['body']) || email['body'].length === 0) {
+        addIssue(
+          issues,
+          `${path}.email.body`,
+          'INVALID_TYPE',
+          'El cuerpo del correo debe contener al menos un párrafo.',
+          identifiers,
+        );
+      } else {
+        if (email['body'].length > 30) {
+          addIssue(
+            issues,
+            `${path}.email.body`,
+            'INVALID_LENGTH',
+            'El cuerpo del correo no puede superar los 30 párrafos.',
+            identifiers,
+          );
+        }
+
+        email['body'].forEach((paragraph, index) => {
+          const paragraphPath = `${path}.email.body[${index}]`;
+
+          if (!isRecord(paragraph)) {
+            addIssue(
+              issues,
+              paragraphPath,
+              'INVALID_TYPE',
+              'El párrafo debe ser un objeto.',
+              identifiers,
+            );
+            return;
+          }
+
+          validateRequiredString(
+            paragraph['text'],
+            `${paragraphPath}.text`,
+            issues,
+            MAX_OPTION_TEXT_LENGTH,
+            identifiers,
+          );
+        });
+      }
+
+      if (!Array.isArray(value['elements']) || value['elements'].length < 2) {
+        addIssue(
+          issues,
+          `${path}.elements`,
+          'INVALID_TYPE',
+          'La actividad debe definir al menos dos elementos seleccionables.',
+          identifiers,
+        );
+        break;
+      }
+
+      if (value['elements'].length > 20) {
+        addIssue(
+          issues,
+          `${path}.elements`,
+          'INVALID_LENGTH',
+          'La actividad no puede superar los 20 elementos seleccionables.',
+          identifiers,
+        );
+      }
+
+      const validEmailElementIds = new Map<string, string>();
+
+      value['elements'].forEach((element, index) => {
+        const elementPath = `${path}.elements[${index}]`;
+
+        if (!isRecord(element)) {
+          addIssue(
+            issues,
+            elementPath,
+            'INVALID_TYPE',
+            'El elemento seleccionable debe ser un objeto.',
+            identifiers,
+          );
+          return;
+        }
+
+        const elementId = validateId(
+          element['id'],
+          `${elementPath}.id`,
+          issues,
+          globalIds,
+          identifiers,
+        );
+        validateRequiredString(
+          element['text'],
+          `${elementPath}.text`,
+          issues,
+          MAX_SHORT_TEXT_LENGTH,
+          identifiers,
+        );
+
+        if (elementId && !validEmailElementIds.has(elementId)) {
+          validEmailElementIds.set(
+            elementId,
+            typeof element['text'] === 'string' ? element['text'] : elementId,
+          );
+        }
+      });
+
+      const context: EmailAnalysisReferenceContext = {
+        validIds:
+          validEmailElementIds.size > 0
+            ? new Set(validEmailElementIds.keys())
+            : null,
+        references: new Map<string, Set<string>>(),
+      };
+
+      validateEmailAnalysisElementId(
+        email['fromElementId'],
+        `${path}.email.fromElementId`,
+        issues,
+        activityId,
+        context,
+        'remitente',
+      );
+      validateEmailAnalysisElementId(
+        email['toElementId'],
+        `${path}.email.toElementId`,
+        issues,
+        activityId,
+        context,
+        'destinatario',
+      );
+      validateEmailAnalysisElementId(
+        email['subjectElementId'],
+        `${path}.email.subjectElementId`,
+        issues,
+        activityId,
+        context,
+        'asunto',
+      );
+      validateEmailAnalysisElementId(
+        email['datetimeElementId'],
+        `${path}.email.datetimeElementId`,
+        issues,
+        activityId,
+        context,
+        'fecha',
+      );
+      validateEmailAnalysisElementId(
+        email['greetingElementId'],
+        `${path}.email.greetingElementId`,
+        issues,
+        activityId,
+        context,
+        'saludo',
+      );
+      validateEmailAnalysisElementId(
+        email['linkElementId'],
+        `${path}.email.linkElementId`,
+        issues,
+        activityId,
+        context,
+        'enlace',
+      );
+      validateEmailAnalysisElementId(
+        email['closingElementId'],
+        `${path}.email.closingElementId`,
+        issues,
+        activityId,
+        context,
+        'cierre',
+      );
+      validateEmailAnalysisElementId(
+        email['signatureElementId'],
+        `${path}.email.signatureElementId`,
+        issues,
+        activityId,
+        context,
+        'firma',
+      );
+
+      if (Array.isArray(email['body'])) {
+        email['body'].forEach((paragraph, index) => {
+          if (!isRecord(paragraph)) {
+            return;
+          }
+
+          validateEmailAnalysisElementId(
+            paragraph['elementId'],
+            `${path}.email.body[${index}].elementId`,
+            issues,
+            activityId,
+            context,
+            `párrafo ${index + 1}`,
+          );
+        });
+      }
+
+      if (
+        validEmailElementIds.size > 0 &&
+        email['linkElementId'] !== undefined
+      ) {
+        if (!email['linkLabel'] && !email['linkUrl']) {
+          addIssue(
+            issues,
+            `${path}.email.linkElementId`,
+            'INVALID_VALUE',
+            'La parte del enlace solo puede referenciarse cuando el correo define un enlace.',
+            identifiers,
+          );
+        }
+      }
+
+      if (validEmailElementIds.size > 0 && context.validIds !== null) {
+        const unreferenced = [...context.validIds].filter(
+          (elementId) => !context.references.has(elementId),
+        );
+
+        if (unreferenced.length > 0) {
+          addIssue(
+            issues,
+            `${path}.elements`,
+            'INVALID_REFERENCE',
+            `Cada elemento definido debe estar asociado a alguna parte del correo. Faltan: ${unreferenced.map((elementId) => `«${validEmailElementIds.get(elementId) ?? elementId}»`).join(', ')}.`,
+            identifiers,
+          );
+        }
+      }
+
+      const solution = isRecord(value['solution']) ? value['solution'] : null;
+
+      if (!solution) {
+        addIssue(
+          issues,
+          `${path}.solution`,
+          'REQUIRED',
+          'La solución es obligatoria.',
+          identifiers,
+        );
+        break;
+      }
+
+      if (validEmailElementIds.size > 0) {
+        validateSolutionIds(
+          solution['elementIds'],
+          `${path}.solution.elementIds`,
+          issues,
+          new Set(validEmailElementIds.keys()),
+          activityId,
+        );
+
+        const solutionIds = solution['elementIds'];
+
+        if (
+          Array.isArray(solutionIds) &&
+          solutionIds.length === validEmailElementIds.size
+        ) {
+          addIssue(
+            issues,
+            `${path}.solution.elementIds`,
+            'INVALID_SOLUTION',
+            'La solución debe dejar al menos un elemento del correo sin marcar como sospechoso.',
+            identifiers,
+          );
+        }
+      }
+      break;
+    }
   }
 }
 
@@ -1669,6 +2242,13 @@ export function isActivityAnswerCorrect(
       return activity.solution.requiredCommands.every((command) =>
         executed.has(command),
       );
+    }
+
+    case 'EMAIL_ANALYSIS': {
+      const selected = stringArray(answer['elementIds']);
+
+      return selected !== null &&
+        sameStringSet(selected, activity.solution.elementIds);
     }
 
     case 'CHAINED':
