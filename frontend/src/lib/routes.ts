@@ -29,6 +29,7 @@ export type AppRoute =
   | { name: "admin-assessment-edit"; courseId: number }
   | { name: "assessment"; courseId: number }
   | { name: "assessment-results"; courseId: number }
+  | { name: "achievements" }
   | { name: "not-found" };
 
 const LEGACY_PATHS: Record<string, string> = {
@@ -225,6 +226,12 @@ export function parseRoute(pathname: string): AppRoute {
     }
   }
 
+  const achievements = /^\/achievements$/.exec(normalized);
+
+  if (achievements) {
+    return { name: "achievements" };
+  }
+
   const assessment =
     /^\/courses\/(\d+)\/assessment$/.exec(normalized);
 
@@ -303,6 +310,8 @@ export function routeTitle(route: AppRoute): string {
       return "Examen final";
     case "assessment-results":
       return "Resultados del examen";
+    case "achievements":
+      return "Mis logros";
     default:
       return "UniCyber Academy";
   }

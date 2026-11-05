@@ -606,6 +606,25 @@ test(
         await db.orm.public.Course.where({ id: courseId }).deleteAll();
       }
 
+      const adminUserCleanup = await db.orm.public.User
+        .where({ email: adminEmail })
+        .first();
+      const studentUserCleanup = await db.orm.public.User
+        .where({ email: studentEmail })
+        .first();
+
+      if (adminUserCleanup) {
+        await db.orm.public.UserAchievement
+          .where({ userId: (adminUserCleanup as unknown as { id: number }).id })
+          .deleteAll();
+      }
+
+      if (studentUserCleanup) {
+        await db.orm.public.UserAchievement
+          .where({ userId: (studentUserCleanup as unknown as { id: number }).id })
+          .deleteAll();
+      }
+
       await db.orm.public.User.where({ email: adminEmail }).deleteAll();
       await db.orm.public.User.where({ email: studentEmail }).deleteAll();
 

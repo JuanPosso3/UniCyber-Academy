@@ -23,6 +23,7 @@ import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
 import { AssessmentPage } from "./pages/courses/AssessmentPage";
 import { AssessmentResultsPage } from "./pages/courses/AssessmentResultsPage";
+import { AchievementCollectionPage } from "./pages/achievements/AchievementCollectionPage";
 import { CourseDetailPage } from "./pages/courses/CourseDetailPage";
 import { CoursesPage } from "./pages/courses/CoursesPage";
 import { LessonPage } from "./pages/courses/LessonPage";
@@ -279,6 +280,11 @@ function AppContent() {
           courseId={route.courseId}
           navigate={navigate}
         />
+      );
+
+    case "achievements":
+      return (
+        <AchievementCollectionPage navigate={navigate} />
       );
 
     default:

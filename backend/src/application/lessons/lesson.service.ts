@@ -22,6 +22,7 @@ import {
 } from '../../domain/lesson-content.js';
 import { AppError } from '../../infrastructure/http/errors.js';
 import { getCourseFinalAssessmentSummary } from '../assessments/assessment.service.js';
+import { evaluateAndUnlockAchievements } from '../achievements/achievement.service.js';
 import type { ModuleSummary } from '../courses/course.types.js';
 import type {
   ActivityCheckResponse,
@@ -1010,6 +1011,9 @@ async function completeLessonForStudent(
   const progress = await createProgressIfMissing(userId, lessonId);
   const updatedCourse = await buildLearningState(courseId, userId);
 
+  // Los logros se otorgan solo tras confirmar el evento académico.
+  await evaluateAndUnlockAchievements(userId);
+
   return {
     lessonProgress: {
       completedAt: progress.completedAt,
@@ -1181,6 +1185,9 @@ export async function finalizeLaboratory(
 
   const progress = await createProgressIfMissing(userId, lessonId);
   const updatedCourse = await buildLearningState(courseId, userId);
+
+  // Los logros se otorgan solo tras confirmar el evento académico.
+  await evaluateAndUnlockAchievements(userId);
 
   return {
     lessonProgress: {

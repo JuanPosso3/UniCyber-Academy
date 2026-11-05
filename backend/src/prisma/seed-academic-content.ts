@@ -11,6 +11,10 @@ import {
   ACADEMIC_FINAL_ASSESSMENTS,
   type FinalAssessmentSpec,
 } from './academic-final-assessments.js';
+import {
+  ACADEMIC_ACHIEVEMENTS,
+  type AchievementSpec,
+} from './academic-achievements.js';
 
 const LAB_MODULE_TITLE = 'Laboratorio práctico del curso';
 
@@ -22,6 +26,8 @@ interface SeedSummary {
   assessmentsUpdated: number;
   assessmentsRemoved: number;
   assessmentsLockedByAttempts: number;
+  achievementsCreated: number;
+  achievementsUpdated: number;
   lessonsSkipped: number;
   lessonsUpdated: number;
   lessonsLockedByProgress: number;
@@ -433,6 +439,72 @@ async function ensureCourseFinalAssessment(
   summary.assessmentsUpdated += 1;
 }
 
+/**
+ * Sincroniza el catálogo de logros.
+ * Crea los logros que faltan y actualiza los existentes cuando difieren.
+ * Nunca elimina logros ni toca los registros de usuarios que ya los obtuvieron.
+ */
+async function ensureAchievements(
+  summary: SeedSummary,
+): Promise<void> {
+  for (const spec of ACADEMIC_ACHIEVEMENTS) {
+    const existing = await db.orm.public.Achievement
+      .where({ code: spec.code })
+      .first();
+
+    if (!existing) {
+      await db.orm.public.Achievement.create({
+        code: spec.code,
+        name: spec.name,
+        description: spec.description,
+        category: spec.category,
+        icon: spec.icon,
+        condition: spec.condition,
+        status: spec.status,
+        order: spec.order,
+      });
+
+      summary.achievementsCreated += 1;
+      continue;
+    }
+
+    const achievement = existing as unknown as {
+      name: string;
+      description: string;
+      category: string;
+      icon: string;
+      condition: string | null;
+      status: string;
+      order: number;
+    };
+
+    const differs =
+      achievement.name !== spec.name ||
+      achievement.description !== spec.description ||
+      achievement.category !== spec.category ||
+      achievement.icon !== spec.icon ||
+      (achievement.condition ?? '') !== (spec.condition ?? '') ||
+      achievement.status !== spec.status ||
+      achievement.order !== spec.order;
+
+    if (differs) {
+      await db.orm.public.Achievement
+        .where({ code: spec.code })
+        .update({
+          name: spec.name,
+          description: spec.description,
+          category: spec.category,
+          icon: spec.icon,
+          condition: spec.condition,
+          status: spec.status,
+          order: spec.order,
+        });
+
+      summary.achievementsUpdated += 1;
+    }
+  }
+}
+
 function flattenLaboratoryModule(course: AcademicCourse): AcademicModule[] {
   const flattened: AcademicModule[] = [];
 
@@ -528,12 +600,15 @@ async function main(): Promise<void> {
     assessmentsUpdated: 0,
     assessmentsRemoved: 0,
     assessmentsLockedByAttempts: 0,
+    achievementsCreated: 0,
+    achievementsUpdated: 0,
     lessonsSkipped: 0,
     lessonsUpdated: 0,
     lessonsLockedByProgress: 0,
   };
 
   await removeStaleModuleAssessments(summary);
+  await ensureAchievements(summary);
 
   for (const course of ACADEMIC_COURSES) {
     const courseRecord = await findOrCreateCourse(course, summary);
@@ -584,6 +659,12 @@ async function main(): Promise<void> {
   );
   console.log(
     `Evaluaciones de módulo antiguas eliminadas: ${summary.assessmentsRemoved}`,
+  );
+  console.log(
+    `Logros del catálogo creados: ${summary.achievementsCreated}`,
+  );
+  console.log(
+    `Logros del catálogo actualizados: ${summary.achievementsUpdated}`,
   );
   console.log(`Lecciones existentes conservadas: ${summary.lessonsSkipped}`);
   console.log(`Lecciones con contenido actualizado: ${summary.lessonsUpdated}`);

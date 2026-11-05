@@ -13,6 +13,7 @@ import {
   type QuestionInput,
 } from '../../domain/assessment.js';
 import { AppError } from '../../infrastructure/http/errors.js';
+import { evaluateAndUnlockAchievements } from '../achievements/achievement.service.js';
 import type { CourseProgressSummary } from '../lessons/lesson.types.js';
 import type {
   AdminCourseFinalAssessmentResponse,
@@ -1052,6 +1053,9 @@ export async function submitFinalAssessment(
       ASSESSMENT_ATTEMPT_FAILED_MESSAGE,
     );
   }
+
+  // Los logros se otorgan solo tras confirmar el intento de evaluación.
+  await evaluateAndUnlockAchievements(userId);
 
   const responsesByQuestionId = await findResponses(attemptId);
   const results = buildResults(
