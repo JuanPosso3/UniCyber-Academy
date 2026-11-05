@@ -1,6 +1,7 @@
 import type { ContentStatus } from '../../domain/content.js';
 import type { LessonType } from '../../domain/lesson.js';
 import type { CourseFinalAssessmentSummary } from '../assessments/assessment.types.js';
+import type { Achievement } from '../achievements/achievement.types.js';
 import type {
   ContentValidationIssue,
   LessonContent,
@@ -136,6 +137,7 @@ export interface LessonProgressResponse {
 export interface LessonCompletionResponse {
   lessonProgress: LessonProgressResponse;
   progress: CourseProgressSummary;
+  newlyUnlocked?: Achievement[];
 }
 
 export interface ActivityCheckResponse {

@@ -1012,13 +1012,14 @@ async function completeLessonForStudent(
   const updatedCourse = await buildLearningState(courseId, userId);
 
   // Los logros se otorgan solo tras confirmar el evento académico.
-  await evaluateAndUnlockAchievements(userId);
+  const unlockResult = await evaluateAndUnlockAchievements(userId);
 
   return {
     lessonProgress: {
       completedAt: progress.completedAt,
     },
     progress: updatedCourse.progress,
+    newlyUnlocked: unlockResult.newlyUnlocked,
   };
 }
 
@@ -1187,12 +1188,13 @@ export async function finalizeLaboratory(
   const updatedCourse = await buildLearningState(courseId, userId);
 
   // Los logros se otorgan solo tras confirmar el evento académico.
-  await evaluateAndUnlockAchievements(userId);
+  const unlockResult = await evaluateAndUnlockAchievements(userId);
 
   return {
     lessonProgress: {
       completedAt: progress.completedAt,
     },
     progress: updatedCourse.progress,
+    newlyUnlocked: unlockResult.newlyUnlocked,
   };
 }

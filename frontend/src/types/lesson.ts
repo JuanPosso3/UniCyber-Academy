@@ -4,6 +4,7 @@ import type {
   CourseSummary,
 } from "./course";
 import type { CourseFinalAssessmentSummary } from "./assessment";
+import type { Achievement } from "./achievement";
 
 export type LessonType = "THEORY" | "LABORATORY";
 
@@ -386,4 +387,5 @@ export interface TerminalResponse {
 export interface LessonCompletionResponse {
   lessonProgress: { completedAt: string };
   progress: CourseProgressSummary;
+  newlyUnlocked?: Achievement[];
 }

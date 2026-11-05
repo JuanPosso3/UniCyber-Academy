@@ -10,6 +10,7 @@ import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { StatePanel } from "../../components/ui/StatePanel";
+import { useAchievementToast } from "../../context/AchievementToastContext";
 import {
   getStudentAssessmentRequest,
   submitAssessmentRequest,
@@ -65,6 +66,7 @@ export function AssessmentPage({
     variant: "success" | "error";
     message: string;
   } | null>(null);
+  const { addToast } = useAchievementToast();
 
   useEffect(() => {
     let active = true;
@@ -178,7 +180,11 @@ export function AssessmentPage({
     setNotice(null);
 
     try {
-      await submitAssessmentRequest(courseId, buildAnswers());
+      const response = await submitAssessmentRequest(courseId, buildAnswers());
+      const newlyUnlocked = response.newlyUnlocked ?? [];
+      for (const achievement of newlyUnlocked) {
+        addToast(achievement);
+      }
       setNotice({
         variant: "success",
         message: "El examen se entregó correctamente.",

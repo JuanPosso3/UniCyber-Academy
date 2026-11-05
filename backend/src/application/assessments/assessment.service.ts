@@ -1055,7 +1055,7 @@ export async function submitFinalAssessment(
   }
 
   // Los logros se otorgan solo tras confirmar el intento de evaluación.
-  await evaluateAndUnlockAchievements(userId);
+  const unlockResult = await evaluateAndUnlockAchievements(userId);
 
   const responsesByQuestionId = await findResponses(attemptId);
   const results = buildResults(
@@ -1066,7 +1066,7 @@ export async function submitFinalAssessment(
     correctFlags,
   );
 
-  return { results };
+  return { results, newlyUnlocked: unlockResult.newlyUnlocked };
 }
 
 export async function getStudentAssessmentResults(

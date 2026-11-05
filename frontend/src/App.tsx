@@ -4,15 +4,16 @@ import { AuthenticatedLayout } from "./components/layout/AuthenticatedLayout";
 import { StatePanel } from "./components/ui/StatePanel";
 import { Button } from "./components/ui/Button";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AchievementToastProvider } from "./context/AchievementToastContext";
 import { isAdminRole } from "./lib/auth";
 import {
   isAdminRoute,
   normalizePath,
   parseRoute,
 } from "./lib/routes";
-import { AdminCoursesPage } from "./pages/admin/AdminCoursesPage";
 import { AdminAssessmentEditorPage } from "./pages/admin/AdminAssessmentEditorPage";
 import { AdminAssessmentPage } from "./pages/admin/AdminAssessmentPage";
+import { AdminCoursesPage } from "./pages/admin/AdminCoursesPage";
 import { CourseFormPage } from "./pages/admin/CourseFormPage";
 import { CourseLessonsPage } from "./pages/admin/CourseLessonsPage";
 import { CourseModulesPage } from "./pages/admin/CourseModulesPage";
@@ -24,6 +25,7 @@ import { Register } from "./pages/auth/Register";
 import { AssessmentPage } from "./pages/courses/AssessmentPage";
 import { AssessmentResultsPage } from "./pages/courses/AssessmentResultsPage";
 import { AchievementCollectionPage } from "./pages/achievements/AchievementCollectionPage";
+import { AchievementToastDisplay } from "./components/achievements/AchievementToastDisplay";
 import { CourseDetailPage } from "./pages/courses/CourseDetailPage";
 import { CoursesPage } from "./pages/courses/CoursesPage";
 import { LessonPage } from "./pages/courses/LessonPage";
@@ -316,7 +318,10 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <AchievementToastProvider>
+        <AppContent />
+        <AchievementToastDisplay />
+      </AchievementToastProvider>
     </AuthProvider>
   );
 }
