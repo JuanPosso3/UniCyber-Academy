@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { AuthenticatedLayout } from "../../components/layout/AuthenticatedLayout";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
@@ -39,6 +39,7 @@ export function AssessmentResultsPage({
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showReview, setShowReview] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -174,10 +175,39 @@ export function AssessmentResultsPage({
         </Card>
 
         <Card className="p-6">
-          <h2 className="text-sm font-semibold text-white mb-4">
-            Revisión de respuestas
-          </h2>
-          <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-white">
+                Revisión de respuestas
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Consulta el detalle de tus 8 respuestas cuando lo necesites.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              aria-expanded={showReview}
+              aria-controls="assessment-answer-review"
+              onClick={() => setShowReview((current) => !current)}
+            >
+              {showReview ? (
+                <>
+                  Ocultar revisión <ChevronUp size={15} />
+                </>
+              ) : (
+                <>
+                  Revisar respuestas <ChevronDown size={15} />
+                </>
+              )}
+            </Button>
+          </div>
+
+          {showReview && (
+          <div
+            id="assessment-answer-review"
+            className="mt-4 space-y-3"
+          >
             {questions.map((question) => (
               <Card
                 key={question.questionId}
@@ -217,43 +247,30 @@ export function AssessmentResultsPage({
                 </div>
                 <div className="space-y-2">
                   {question.answeredCorrectly && question.explanation ? (
-                    <div className="rounded-lg border border-green/40 bg-green/10 p-3">
-                      <p className="text-xs font-semibold text-green mb-1">
+                    <div className="rounded-lg border border-success/25 bg-success/10 p-3">
+                      <p className="text-xs font-semibold text-success mb-1">
                         ¿Por qué es correcta?
                       </p>
-                      <p className="text-sm text-green/90">
+                      <p className="text-sm text-success/90">
                         {question.explanation}
                       </p>
                     </div>
                   ) : (
-                    <>
-                      {question.hint && (
-                        <div className="rounded-lg border border-blue/40 bg-blue/10 p-3">
-                          <p className="text-xs font-semibold text-blue mb-1">
-                            Orientación para repasar
-                          </p>
-                          <p className="text-sm text-blue/90">
-                            {question.hint}
-                          </p>
-                        </div>
-                      )}
-                      {!question.hint && (
-                        <div className="rounded-lg border border-blue/40 bg-blue/10 p-3">
-                          <p className="text-xs font-semibold text-blue mb-1">
-                            Orientación para repasar
-                          </p>
-                          <p className="text-sm text-blue/90">
-                            Revisa la lección relacionada con este concepto y
-                            vuelve a intentarlo.
-                          </p>
-                        </div>
-                      )}
-                    </>
+                    <div className="rounded-lg border border-warning/25 bg-warning/10 p-3">
+                      <p className="text-xs font-semibold text-warning mb-1">
+                        Orientación para repasar
+                      </p>
+                      <p className="text-sm text-warning/90">
+                        {question.hint ??
+                          "Revisa la lección relacionada con este concepto y vuelve a intentarlo."}
+                      </p>
+                    </div>
                   )}
                 </div>
               </Card>
             ))}
           </div>
+          )}
         </Card>
 
         <div className="mt-2 flex justify-end">

@@ -8,6 +8,7 @@ interface AdminNavProps {
 }
 
 const ADMIN_ITEMS = [
+  { label: "Estadísticas", path: "/admin/statistics" },
   { label: "Cursos", path: "/admin/courses" },
 ];
 

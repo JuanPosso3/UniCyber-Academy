@@ -14,6 +14,12 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   status: UserStatus;
+  username?: string | null;
+}
+
+/** Perfil público de la cuenta autenticada. */
+export interface UserProfile extends AuthUser {
+  username: string | null;
 }
 
 export interface AuthResponse {

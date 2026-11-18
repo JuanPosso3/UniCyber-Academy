@@ -3,7 +3,10 @@ import {
   BookOpen,
   LayoutDashboard,
   LogOut,
+  Settings,
   Shield,
+  Trophy,
+  UserRound,
 } from "lucide-react";
 import { Avatar } from "../ui/Avatar";
 import { cn } from "../../lib/utils";
@@ -39,9 +42,25 @@ const NAV_ITEMS: NavItem[] = [
     icon: <BookOpen size={18} />,
   },
   {
+    label: "Logros",
+    path: "/achievements",
+    icon: <Trophy size={18} />,
+  },
+  {
+    label: "Mi perfil",
+    path: "/profile",
+    icon: <UserRound size={18} />,
+  },
+  {
+    label: "Estadísticas",
+    path: "/admin/statistics",
+    icon: <BarChart3 size={18} />,
+    adminOnly: true,
+  },
+  {
     label: "Administrar cursos",
     path: "/admin/courses",
-    icon: <BarChart3 size={18} />,
+    icon: <Settings size={18} />,
     adminOnly: true,
   },
 ];

@@ -24,7 +24,7 @@ interface AuthContextValue {
   isSubmitting: boolean;
   sessionNotice: SessionNotice | null;
   login: (email: string, password: string) => Promise<AuthUser>;
-  logout: () => Promise<void>;
+  logout: (notice?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -94,14 +94,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = async (notice?: string): Promise<void> => {
     setIsSubmitting(true);
 
     try {
       await logoutRequest();
       setSessionNotice({
         variant: "success",
-        message: "Has cerrado sesión correctamente.",
+        message: notice ?? "Has cerrado sesión correctamente.",
       });
     } catch (error) {
       setSessionNotice({
