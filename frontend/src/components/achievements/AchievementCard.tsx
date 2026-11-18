@@ -73,11 +73,11 @@ export function AchievementCard({ entry }: AchievementCardProps) {
         <p className="text-xs font-semibold text-white mb-1">
           {entry.earned ? "Desbloqueado" : "Bloqueado"}
         </p>
+        {entry.earned && (
         <p className="text-xs text-muted-foreground">
-          {entry.earned
-            ? `Obtenido el ${formatDate(entry.earnedAt)}`
-            : requirement ?? "Requisito no disponible."}
+          Obtenido el {formatDate(entry.earnedAt)}
         </p>
+        )}
       </div>
       {entry.earned && (
         <div className="mt-4 flex items-center gap-2 text-xs">

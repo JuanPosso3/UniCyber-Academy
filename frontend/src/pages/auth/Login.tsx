@@ -131,9 +131,9 @@ export function Login({ navigate }: LoginProps) {
         <div className="flex justify-end">
           <button
             type="button"
-            className="text-xs text-primary opacity-60 cursor-not-allowed"
-            disabled
-            title="Disponible próximamente"
+            className="text-xs text-primary hover:underline disabled:opacity-60 disabled:no-underline"
+            onClick={() => navigate("/forgot-password")}
+            disabled={isSubmitting}
           >
             ¿Olvidaste tu contraseña?
           </button>

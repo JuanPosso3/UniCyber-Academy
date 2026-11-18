@@ -45,6 +45,17 @@ export async function requireAuth(
     throw new AppError(401, 'UNAUTHENTICATED', UNAUTHENTICATED_MESSAGE);
   }
 
+  // Invalida tokens emitidos antes de un cambio de contraseña, de modo
+  // que una contraseña cambiada invalide las sesiones previas.
+  if (
+    payload.iat &&
+    user.passwordChangedAt &&
+    payload.iat * 1000 < new Date(user.passwordChangedAt).getTime()
+  ) {
+    clearSessionCookie(res);
+    throw new AppError(401, 'UNAUTHENTICATED', UNAUTHENTICATED_MESSAGE);
+  }
+
   (req as AuthenticatedRequest).authUser = user;
 
   next();

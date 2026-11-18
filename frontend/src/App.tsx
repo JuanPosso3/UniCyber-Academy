@@ -13,6 +13,7 @@ import {
 } from "./lib/routes";
 import { AdminAssessmentEditorPage } from "./pages/admin/AdminAssessmentEditorPage";
 import { AdminAssessmentPage } from "./pages/admin/AdminAssessmentPage";
+import { AdminStatisticsPage } from "./pages/admin/AdminStatisticsPage";
 import { AdminCoursesPage } from "./pages/admin/AdminCoursesPage";
 import { CourseFormPage } from "./pages/admin/CourseFormPage";
 import { CourseLessonsPage } from "./pages/admin/CourseLessonsPage";
@@ -20,6 +21,7 @@ import { CourseModulesPage } from "./pages/admin/CourseModulesPage";
 import { LessonFormPage } from "./pages/admin/LessonFormPage";
 import { LessonPreviewPage } from "./pages/admin/LessonPreviewPage";
 import { ModuleFormPage } from "./pages/admin/ModuleFormPage";
+import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
 import { AssessmentPage } from "./pages/courses/AssessmentPage";
@@ -30,6 +32,7 @@ import { CourseDetailPage } from "./pages/courses/CourseDetailPage";
 import { CoursesPage } from "./pages/courses/CoursesPage";
 import { LessonPage } from "./pages/courses/LessonPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
+import { ProfilePage } from "./pages/profile/ProfilePage";
 
 function AppContent() {
   const { user, isBootstrapping } = useAuth();
@@ -77,7 +80,9 @@ function AppContent() {
     }
 
     const isPublicRoute =
-      route.name === "login" || route.name === "register";
+      route.name === "login" ||
+      route.name === "register" ||
+      route.name === "forgot-password";
 
     if (!user && !isPublicRoute) {
       replace("/login");
@@ -113,16 +118,24 @@ function AppContent() {
   }
 
   if (!user) {
-    return route.name === "register" ? (
-      <Register navigate={navigate} />
-    ) : (
-      <Login navigate={navigate} />
-    );
+    if (route.name === "register") {
+      return <Register navigate={navigate} />;
+    }
+
+    if (route.name === "forgot-password") {
+      return <ForgotPasswordPage navigate={navigate} />;
+    }
+
+    return <Login navigate={navigate} />;
   }
 
   // La guardia reemplaza la URL por /dashboard; se evita mostrar el
   // estado "no encontrado" durante ese primer render.
-  if (route.name === "login" || route.name === "register") {
+  if (
+    route.name === "login" ||
+    route.name === "register" ||
+    route.name === "forgot-password"
+  ) {
     return <DashboardPage navigate={navigate} />;
   }
 
@@ -155,6 +168,9 @@ function AppContent() {
     case "dashboard":
       return <DashboardPage navigate={navigate} />;
 
+    case "profile":
+      return <ProfilePage navigate={navigate} />;
+
     case "courses":
       return <CoursesPage navigate={navigate} />;
 
@@ -174,6 +190,9 @@ function AppContent() {
           navigate={navigate}
         />
       );
+
+    case "admin-statistics":
+      return <AdminStatisticsPage navigate={navigate} />;
 
     case "admin-courses":
       return <AdminCoursesPage navigate={navigate} />;

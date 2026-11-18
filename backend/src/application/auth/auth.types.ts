@@ -14,6 +14,10 @@ export interface AuthUser {
   status: UserStatus;
   createdAt: string;
   updatedAt: string;
+  /** Marca cuándo se cambió por última vez la contraseña. */
+  passwordChangedAt: string | null;
+  /** Nombre de usuario público opcional. */
+  username: string | null;
 }
 
 /**
@@ -27,6 +31,8 @@ export interface PublicUser {
   email: string;
   role: UserRole;
   status: UserStatus;
+  /** Nombre de usuario público opcional. */
+  username: string | null;
 }
 
 export interface AuthResponse {

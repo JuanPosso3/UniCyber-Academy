@@ -1,10 +1,13 @@
 export type AppRoute =
   | { name: "login" }
   | { name: "register" }
+  | { name: "forgot-password" }
   | { name: "dashboard" }
+  | { name: "profile" }
   | { name: "courses" }
   | { name: "course-detail"; courseId: number }
   | { name: "lesson"; courseId: number; lessonId: number }
+  | { name: "admin-statistics" }
   | { name: "admin-courses" }
   | { name: "admin-course-new" }
   | { name: "admin-course-edit"; courseId: number }
@@ -68,12 +71,24 @@ export function parseRoute(pathname: string): AppRoute {
     return { name: "register" };
   }
 
+  if (normalized === "/forgot-password") {
+    return { name: "forgot-password" };
+  }
+
   if (normalized === "/" || normalized === "/dashboard") {
     return { name: "dashboard" };
   }
 
+  if (normalized === "/profile") {
+    return { name: "profile" };
+  }
+
   if (normalized === "/courses") {
     return { name: "courses" };
+  }
+
+  if (normalized === "/admin/statistics") {
+    return { name: "admin-statistics" };
   }
 
   if (normalized === "/admin/courses") {
@@ -276,6 +291,12 @@ export function routeTitle(route: AppRoute): string {
   switch (route.name) {
     case "dashboard":
       return "Panel";
+    case "profile":
+      return "Mi perfil";
+    case "forgot-password":
+      return "Recuperar contraseña";
+    case "admin-statistics":
+      return "Estadísticas";
     case "courses":
       return "Catálogo de cursos";
     case "course-detail":
