@@ -16,6 +16,7 @@ const secret = new TextEncoder().encode(env.jwtSecret);
 export interface AccessTokenPayload {
   userId: number;
   role: UserRole;
+  iat?: number;
 }
 
 export async function signAccessToken(user: {
@@ -56,6 +57,7 @@ export async function verifyAccessToken(
     return {
       userId,
       role: payload.role,
+      iat: payload.iat ? Number(payload.iat) : undefined,
     };
   } catch {
     return null;

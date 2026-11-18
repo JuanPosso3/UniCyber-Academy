@@ -10,6 +10,8 @@ import { adminLessonRouter } from './application/lessons/admin-lesson.routes.js'
 import { assessmentRouter } from './application/assessments/assessment.routes.js';
 import { adminAssessmentRouter } from './application/assessments/admin-assessment.routes.js';
 import { achievementRouter } from './application/achievements/achievement.routes.js';
+import { userRouter } from './application/users/user.routes.js';
+import { adminRouter } from './application/admin/admin.routes.js';
 import { db } from './prisma/db.js';
 import { AppError, errorHandler } from './infrastructure/http/errors.js';
 
@@ -68,6 +70,8 @@ export function createApp(): express.Express {
   });
 
   app.use('/api/auth', authRouter);
+  app.use('/api/users', userRouter);
+  app.use('/api/admin', adminRouter);
   app.use('/api/courses', courseRouter);
   app.use('/api/courses', assessmentRouter);
   app.use('/api/admin/courses', adminLessonRouter);

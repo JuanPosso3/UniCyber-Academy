@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'89e99793d48ad74c276d9202aae395e00a52acd05754871dfb14ddd449bece53'>;
+  StorageHashBase<'2c3ee0e049a74a92cbc0364ca54d685d3d7279dcc7e2a6739df998e08582fcab'>;
 export type ExecutionHash =
   ExecutionHashBase<'09406e7c5bf17fba27b13cbfbe2d2d3a2413570360585c61e9e5a3fa9e1d0357'>;
 export type ProfileHash =
@@ -314,6 +314,14 @@ export type FieldOutputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly PasswordReset: {
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+      readonly codeHash: CodecTypes['pg/text@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly usedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly attempts: CodecTypes['pg/int4@1']['output'];
+    };
     readonly Question: {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly assessmentId: CodecTypes['pg/int4@1']['output'];
@@ -336,12 +344,14 @@ export type FieldOutputTypes = {
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly firstName: CodecTypes['pg/text@1']['output'];
       readonly lastName: CodecTypes['pg/text@1']['output'];
+      readonly username: CodecTypes['pg/text@1']['output'] | null;
       readonly email: CodecTypes['pg/text@1']['output'];
       readonly passwordHash: CodecTypes['pg/text@1']['output'];
       readonly role: 'STUDENT' | 'TEACHER' | 'ADMINISTRATIVE' | 'VISITOR' | 'MENTOR';
       readonly status: 'ACTIVE' | 'DISABLED';
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly passwordChangedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     };
     readonly UserAchievement: {
       readonly id: CodecTypes['pg/int4@1']['output'];
@@ -426,6 +436,14 @@ export type FieldInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
+    readonly PasswordReset: {
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+      readonly codeHash: CodecTypes['pg/text@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly usedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly attempts: CodecTypes['pg/int4@1']['input'];
+    };
     readonly Question: {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly assessmentId: CodecTypes['pg/int4@1']['input'];
@@ -448,12 +466,14 @@ export type FieldInputTypes = {
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly firstName: CodecTypes['pg/text@1']['input'];
       readonly lastName: CodecTypes['pg/text@1']['input'];
+      readonly username: CodecTypes['pg/text@1']['input'] | null;
       readonly email: CodecTypes['pg/text@1']['input'];
       readonly passwordHash: CodecTypes['pg/text@1']['input'];
       readonly role: 'STUDENT' | 'TEACHER' | 'ADMINISTRATIVE' | 'VISITOR' | 'MENTOR';
       readonly status: 'ACTIVE' | 'DISABLED';
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly passwordChangedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
     readonly UserAchievement: {
       readonly id: CodecTypes['pg/int4@1']['input'];
@@ -538,6 +558,14 @@ export type StorageColumnTypes = {
       readonly title: CodecTypes['pg/text@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly passwordReset: {
+      readonly attempts: CodecTypes['pg/int4@1']['output'];
+      readonly codeHash: CodecTypes['pg/text@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/int4@1']['output'];
+      readonly usedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly userId: CodecTypes['pg/int4@1']['output'];
+    };
     readonly question: {
       readonly assessmentId: CodecTypes['pg/int4@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
@@ -562,10 +590,12 @@ export type StorageColumnTypes = {
       readonly firstName: CodecTypes['pg/text@1']['output'];
       readonly id: CodecTypes['pg/int4@1']['output'];
       readonly lastName: CodecTypes['pg/text@1']['output'];
+      readonly passwordChangedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
       readonly passwordHash: CodecTypes['pg/text@1']['output'];
       readonly role: 'STUDENT' | 'TEACHER' | 'ADMINISTRATIVE' | 'VISITOR' | 'MENTOR';
       readonly status: 'ACTIVE' | 'DISABLED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly username: CodecTypes['pg/text@1']['output'] | null;
     };
     readonly userAchievement: {
       readonly achievementId: CodecTypes['pg/int4@1']['output'];
@@ -650,6 +680,14 @@ export type StorageColumnInputTypes = {
       readonly title: CodecTypes['pg/text@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
+    readonly passwordReset: {
+      readonly attempts: CodecTypes['pg/int4@1']['input'];
+      readonly codeHash: CodecTypes['pg/text@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/int4@1']['input'];
+      readonly usedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly userId: CodecTypes['pg/int4@1']['input'];
+    };
     readonly question: {
       readonly assessmentId: CodecTypes['pg/int4@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -674,10 +712,12 @@ export type StorageColumnInputTypes = {
       readonly firstName: CodecTypes['pg/text@1']['input'];
       readonly id: CodecTypes['pg/int4@1']['input'];
       readonly lastName: CodecTypes['pg/text@1']['input'];
+      readonly passwordChangedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly passwordHash: CodecTypes['pg/text@1']['input'];
       readonly role: 'STUDENT' | 'TEACHER' | 'ADMINISTRATIVE' | 'VISITOR' | 'MENTOR';
       readonly status: 'ACTIVE' | 'DISABLED';
       readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly username: CodecTypes['pg/text@1']['input'] | null;
     };
     readonly userAchievement: {
       readonly achievementId: CodecTypes['pg/int4@1']['input'];
@@ -694,16 +734,20 @@ export namespace Models {
     id: CodecTypes['pg/int4@1']['output'];
     firstName: CodecTypes['pg/text@1']['output'];
     lastName: CodecTypes['pg/text@1']['output'];
+    username: CodecTypes['pg/text@1']['output'] | null;
     email: CodecTypes['pg/text@1']['output'];
     passwordHash: CodecTypes['pg/text@1']['output'];
     role: 'STUDENT' | 'TEACHER' | 'ADMINISTRATIVE' | 'VISITOR' | 'MENTOR';
     status: 'ACTIVE' | 'DISABLED';
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    passwordChangedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
     achievements: public_UserAchievement[];
     assessmentAttempts: public_AssessmentAttempt[];
     lessonProgress: public_LessonProgress[];
-    readonly [RelationKeys]?: 'achievements' | 'assessmentAttempts' | 'lessonProgress';
+    passwordResets: public_PasswordReset[];
+    readonly [RelationKeys]?:
+      'achievements' | 'assessmentAttempts' | 'lessonProgress' | 'passwordResets';
   };
   export type public_Course = {
     id: CodecTypes['pg/int4@1']['output'];
@@ -840,6 +884,16 @@ export namespace Models {
     user: public_User;
     readonly [RelationKeys]?: 'achievement' | 'user';
   };
+  export type public_PasswordReset = {
+    id: CodecTypes['pg/int4@1']['output'];
+    userId: CodecTypes['pg/int4@1']['output'];
+    codeHash: CodecTypes['pg/text@1']['output'];
+    expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    usedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    attempts: CodecTypes['pg/int4@1']['output'];
+    user: public_User;
+    readonly [RelationKeys]?: 'user';
+  };
 }
 
 export declare const models: {
@@ -856,6 +910,7 @@ export declare const models: {
     QuestionResponse: Models.public_QuestionResponse;
     Achievement: Models.public_Achievement;
     UserAchievement: Models.public_UserAchievement;
+    PasswordReset: Models.public_PasswordReset;
   };
 };
 
@@ -1444,6 +1499,72 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly passwordReset: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly userId: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                };
+                readonly codeHash: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly expiresAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+                readonly usedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly attempts: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 0>;
+                  };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'passwordReset_userId_idx_a489d58a';
+                  readonly prefix: 'passwordReset_userId_idx';
+                  readonly columns: readonly ['userId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'passwordReset';
+                    readonly columns: readonly ['userId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'user';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly question: {
               columns: {
                 readonly id: {
@@ -1640,6 +1761,11 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
+                readonly username: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
                 readonly email: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
@@ -1675,9 +1801,17 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/timestamptz-string@1';
                   readonly nullable: false;
                 };
+                readonly passwordChangedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [{ readonly columns: readonly ['email'] }];
+              uniques: readonly [
+                { readonly columns: readonly ['username'] },
+                { readonly columns: readonly ['email'] },
+              ];
               indexes: readonly [];
               foreignKeys: readonly [];
             };
@@ -1832,6 +1966,10 @@ type ContractBase = Omit<
     readonly userAchievement: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'UserAchievement';
+    };
+    readonly passwordReset: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PasswordReset';
     };
   };
   readonly domain: {
@@ -2464,6 +2602,63 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly PasswordReset: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly codeHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly expiresAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly usedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly attempts: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'passwordReset';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly userId: { readonly column: 'userId' };
+                readonly codeHash: { readonly column: 'codeHash' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly usedAt: { readonly column: 'usedAt' };
+                readonly attempts: { readonly column: 'attempts' };
+              };
+            };
+          };
           readonly Question: {
             readonly fields: {
               readonly id: {
@@ -2648,6 +2843,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly username: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly email: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -2673,6 +2872,13 @@ type ContractBase = Omit<
               };
               readonly updatedAt: {
                 readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly passwordChangedAt: {
+                readonly nullable: true;
                 readonly type: {
                   readonly kind: 'scalar';
                   readonly codecId: 'pg/timestamptz-string@1';
@@ -2713,6 +2919,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['userId'];
                 };
               };
+              readonly passwordResets: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PasswordReset';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['userId'];
+                };
+              };
             };
             readonly storage: {
               readonly table: 'user';
@@ -2721,12 +2938,14 @@ type ContractBase = Omit<
                 readonly id: { readonly column: 'id' };
                 readonly firstName: { readonly column: 'firstName' };
                 readonly lastName: { readonly column: 'lastName' };
+                readonly username: { readonly column: 'username' };
                 readonly email: { readonly column: 'email' };
                 readonly passwordHash: { readonly column: 'passwordHash' };
                 readonly role: { readonly column: 'role' };
                 readonly status: { readonly column: 'status' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
+                readonly passwordChangedAt: { readonly column: 'passwordChangedAt' };
               };
             };
           };

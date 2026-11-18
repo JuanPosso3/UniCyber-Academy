@@ -39,16 +39,24 @@ model User {
   id        Int        @id @default(autoincrement())
   firstName String
   lastName  String
+  // Nombre de usuario público opcional y único. Se usa como identificador
+  // visible en el perfil; el correo sigue siendo la credencial de acceso.
+  username  String?   @unique
   email     String     @unique
   passwordHash String
   role      UserRole
   status    UserStatus @default(ACTIVE)
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
+  // Marca cuándo se cambió por última vez la contraseña. Sirve para
+  // invalidar los JWT emitidos antes del cambio (auth.middleware lo
+  // comprueba frente al iat del token).
+  passwordChangedAt TimestamptzString?
 
   lessonProgress     LessonProgress[]
   assessmentAttempts AssessmentAttempt[]
   achievements       UserAchievement[]
+  passwordResets     PasswordReset[]
 }
 
 model Course {
@@ -211,4 +219,16 @@ model UserAchievement {
   achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([userId, achievementId])
+}
+
+model PasswordReset {
+  id          Int   @id @default(autoincrement())
+  userId      Int
+  // Hash bcrypt del código de recuperación. Nunca se guarda el código en texto plano.
+  codeHash    String
+  expiresAt   TimestamptzString
+  usedAt      TimestamptzString?
+  attempts    Int   @default(0)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 }
