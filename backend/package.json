@@ -16,7 +16,11 @@
     "seed:academic": "tsx src/prisma/seed-academic-content.ts",
     "start": "node dist/server.js",
     "postinstall": "prisma skills sync || exit 0",
-    "contract:emit": "prisma contract emit"
+    "contract:emit": "prisma contract emit",
+    "db:check": "prisma migration check",
+    "db:verify": "prisma db verify",
+    "db:migrate": "prisma db migrate",
+    "db:status": "prisma db migrate --show"
   },
   "keywords": [],
   "author": "",

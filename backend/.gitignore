@@ -1,6 +1,10 @@
 node_modules/
 dist/
 
+# Respaldos de base de datos: contienen datos personales y hashes de
+# contraseñas. Nunca deben versionarse.
+backups/
+
 .env
 .env.local
 .env.*.local

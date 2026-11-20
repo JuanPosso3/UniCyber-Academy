@@ -52,3 +52,7 @@ backend/prisma-8.md
 # Documentation and guides
 docs/
 frontendGuide/
+
+# La documentación del backend sí se versiona.
+!backend/docs/
+!backend/docs/**

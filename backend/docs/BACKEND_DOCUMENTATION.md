@@ -8,6 +8,8 @@
 | Proyecto | Prototipo web educativo de concientización en ciberseguridad — proyecto de grado de Ingeniería de Sistemas, Universidad del Valle, sede Tuluá (Colombia) |
 
 > **Actualización (2026-10-19).** Se implementó y verificó la autenticación JWT y el subconjunto de frontend descrito en `docs/AUTH_INTEGRATION.md`. Las secciones 2, 3, 9, 13 y 15 describen el snapshot original (2026-10-16) y se conservan como referencia histórica; el estado vigente está en el apéndice §16. **Actualización posterior (2026-10-19):** el backend y el frontend quedaron separados en proyectos hermanos (`unicyber/backend/` y `unicyber/frontend/`); ver §17.
+>
+> **Actualización (2026-11-18).** Se reconstruyó el grafo de migraciones de Prisma ORM 8, se creó la base de producción en Neon y se transfirieron los datos. El contrato vigente tiene 13 modelos y no usa enums de PostgreSQL. La información operativa actual está en `docs/DATABASE_ARCHITECTURE.md`, `docs/PRISMA_ORM_8_MIGRATIONS.md`, `docs/NEON_CONFIGURATION.md`, `docs/DATABASE_DATA_MIGRATION.md` y `docs/PRODUCTION_DATABASE_DEPLOYMENT.md`.
 
 ---
 

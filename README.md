@@ -70,10 +70,10 @@ pnpm typecheck:all   # ambos
 pnpm test
 ```
 
-Ejecuta la prueba de integración de cursos y módulos contra PostgreSQL real.
-Crea datos temporales, usa las rutas HTTP de la aplicación y elimina sus propios
-datos al finalizar. Detalle en
-`backend/docs/COURSE_CATALOG_AND_MODULE_MANAGEMENT.md`.
+Ejecuta las pruebas de integración contra PostgreSQL real: cursos y módulos,
+lecciones, evaluaciones, gamificación, cuenta de usuario y panel administrativo.
+Crean datos temporales, usan las rutas HTTP de la aplicación y eliminan sus
+propios datos al finalizar.
 
 ## Build
 
@@ -84,6 +84,27 @@ pnpm build       # compila el backend en backend/dist/
 pnpm build:web   # genera el frontend en frontend/dist/
 pnpm build:all   # ambos, en orden
 ```
+
+## Base de datos
+
+El proyecto usa Prisma ORM 8 con un contrato (`contract.prisma`) y migraciones
+en `backend/migrations/`. Los comandos se ejecutan desde `backend/`:
+
+```bash
+pnpm db:check       # integridad del grafo de migraciones
+pnpm db:verify      # marcador y esquema contra el contrato
+pnpm db:migrate     # aplica migraciones pendientes
+pnpm db:status      # muestra la ruta pendiente sin aplicar
+```
+
+La base local se conserva como fuente de verdad. La base de producción está en
+Neon y el backend se despliega en Render. Ver:
+
+- `backend/docs/DATABASE_ARCHITECTURE.md`
+- `backend/docs/PRISMA_ORM_8_MIGRATIONS.md`
+- `backend/docs/NEON_CONFIGURATION.md`
+- `backend/docs/DATABASE_DATA_MIGRATION.md`
+- `backend/docs/PRODUCTION_DATABASE_DEPLOYMENT.md`
 
 ## Producción
 
@@ -113,6 +134,8 @@ Backend (`backend/.env`, basado en `backend/.env.example`):
 - `DATABASE_URL`
 - `JWT_SECRET`
 - `JWT_EXPIRES_IN`
+- `RESEND_API_KEY` (recuperación de contraseña)
+- `RESEND_FROM_EMAIL` (opcional; remitente verificado)
 - `COOKIE_SECURE` (opcional)
 
 Frontend (`frontend/.env`, basado en `frontend/.env.example`):
