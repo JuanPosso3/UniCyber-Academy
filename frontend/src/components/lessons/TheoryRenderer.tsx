@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { isSafeHttpUrl } from "../../lib/url";
 import { InlineText } from "./InlineText";
 import { TheoryCallout } from "./TheoryCallout";
 import type {
@@ -133,14 +134,10 @@ function Block({ block }: { block: TheoryBlock }) {
       return <CodeBlock content={block.content} language={block.language} />;
     case "callout":
       return <TheoryCallout variant={block.variant} content={block.content} />;
-    case "link":
-      return (
-        <a
-          href={block.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-start gap-3 rounded-2xl border border-border bg-white/5 p-4 transition-colors hover:border-accent/40 hover:bg-accent/5"
-        >
+    case "link": {
+      const safeUrl = isSafeHttpUrl(block.url) ? block.url : null;
+      const content = (
+        <>
           <ExternalLink
             size={16}
             className="mt-0.5 flex-shrink-0 text-accent"
@@ -159,8 +156,28 @@ function Block({ block }: { block: TheoryBlock }) {
               {block.url}
             </span>
           </span>
+        </>
+      );
+
+      if (!safeUrl) {
+        return (
+          <div className="flex items-start gap-3 rounded-2xl border border-border bg-white/5 p-4">
+            {content}
+          </div>
+        );
+      }
+
+      return (
+        <a
+          href={safeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-start gap-3 rounded-2xl border border-border bg-white/5 p-4 transition-colors hover:border-accent/40 hover:bg-accent/5"
+        >
+          {content}
         </a>
       );
+    }
     default:
       return null;
   }

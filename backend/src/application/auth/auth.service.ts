@@ -3,6 +3,7 @@ import { AppError } from '../../infrastructure/http/errors.js';
 import {
   getDummyPasswordHash,
   hashPassword,
+  passwordHashNeedsRehash,
   verifyPassword,
 } from '../../infrastructure/security/password.js';
 import type { AuthUser, PublicUser } from './auth.types.js';
@@ -74,7 +75,7 @@ export async function registerUser(
 
 export async function loginUser(
   input: LoginInput,
-): Promise<PublicUser> {
+): Promise<AuthUser> {
   const user = await db.orm.public.User
     .where((candidate) => candidate.email.eq(input.email))
     .first();
@@ -107,7 +108,41 @@ export async function loginUser(
     throw new AppError(403, 'ACCOUNT_DISABLED', ACCOUNT_DISABLED);
   }
 
-  return toPublicUser(user);
+  // Actualiza hashes creados con parámetros anteriores sin invalidar la
+  // contraseña ni la sesión que se está creando.
+  if (passwordHashNeedsRehash(user.passwordHash)) {
+    await rehashPasswordIfUnchanged(
+      user.id,
+      user.passwordHash,
+      input.password,
+    );
+  }
+
+  return user;
+}
+
+/**
+ * Reemplaza un hash antiguo solo si la fila sigue teniendo exactamente el
+ * hash leído. Si otra petición cambió la contraseña entretanto, la
+ * actualización condicional afecta a cero filas y no sobrescribe el cambio.
+ */
+export async function rehashPasswordIfUnchanged(
+  userId: number,
+  previousHash: string,
+  password: string,
+): Promise<void> {
+  try {
+    await db.orm.public.User
+      .where({ id: userId })
+      .where((candidate) => candidate.passwordHash.eq(previousHash))
+      .update({ passwordHash: await hashPassword(password) });
+  } catch {
+    // Un fallo al actualizar el hash no debe impedir un login válido;
+    // el hash anterior sigue siendo verificable.
+    console.error(
+      'No se pudo actualizar el hash de contraseña a los parámetros actuales.',
+    );
+  }
 }
 
 export async function findActiveUserById(

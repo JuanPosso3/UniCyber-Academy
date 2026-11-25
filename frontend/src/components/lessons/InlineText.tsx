@@ -1,16 +1,8 @@
 import type { ReactNode } from "react";
+import { isSafeHttpUrl } from "../../lib/url";
 
 const TOKEN_PATTERN =
   /(\*\*[^*]+\*\*|==[^=]+==|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
-
-function isSafeUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
-  } catch {
-    return false;
-  }
-}
 
 function renderLink(token: string, key: number): ReactNode {
   const match = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(token);
@@ -22,7 +14,7 @@ function renderLink(token: string, key: number): ReactNode {
   const label = match[1]!;
   const url = match[2]!.trim();
 
-  if (!isSafeUrl(url)) {
+  if (!isSafeHttpUrl(url)) {
     return label;
   }
 

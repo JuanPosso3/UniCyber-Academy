@@ -14,6 +14,9 @@ import { userRouter } from './application/users/user.routes.js';
 import { adminRouter } from './application/admin/admin.routes.js';
 import { db } from './prisma/db.js';
 import { AppError, errorHandler } from './infrastructure/http/errors.js';
+import { securityHeaders } from './infrastructure/http/security-headers.js';
+import { csrfProtection } from './infrastructure/http/csrf.middleware.js';
+import { configureTrustProxy } from './infrastructure/http/trust-proxy.js';
 
 /**
  * Construye la aplicación Express.
@@ -26,17 +29,17 @@ export function createApp(): express.Express {
   const app = express();
 
   app.disable('x-powered-by');
+
+  // No confiar en cabeceras reenviadas sin una topología verificada.
+  configureTrustProxy(app);
+
+  app.use(securityHeaders);
+  app.use('/api', csrfProtection());
+
   // El contenido JSON de lecciones y laboratorios puede superar el
   // límite histórico de 10 KB. Se mantiene un límite acotado para el
   // resto de la API.
   app.use(express.json({ limit: '1mb' }));
-
-  app.use((_req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('Referrer-Policy', 'no-referrer');
-    next();
-  });
 
   app.get('/', (_req, res) => {
     res.json({
@@ -53,14 +56,15 @@ export function createApp(): express.Express {
 
   app.get('/api/health/database', async (_req, res) => {
     try {
-      await db.orm.public.User.all();
+      // Comprueba la conexión sin cargar todos los usuarios ni sus hashes.
+      await db.orm.public.User.first({ id: 1 });
 
       res.json({
         status: 'ok',
         database: 'connected',
       });
-    } catch (error) {
-      console.error('Error al verificar PostgreSQL:', error);
+    } catch {
+      console.error('Error al verificar la conexión con PostgreSQL.');
 
       res.status(500).json({
         status: 'error',

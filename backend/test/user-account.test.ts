@@ -42,6 +42,7 @@ async function requestJson<T>(
   } = {},
 ): Promise<{ status: number; body: T }> {
   const headers = new Headers();
+  headers.set('x-unicyber-request', '1');
 
   if (options.cookie) {
     headers.set('cookie', options.cookie);
@@ -78,7 +79,7 @@ async function registerAndLogin(email: string): Promise<string> {
 
   const response = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', 'x-unicyber-request': '1' },
     body: JSON.stringify({ email, password: TEST_PASSWORD }),
   });
 
@@ -93,7 +94,7 @@ async function registerAndLogin(email: string): Promise<string> {
 async function login(email: string, password: string = TEST_PASSWORD): Promise<string> {
   const response = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', 'x-unicyber-request': '1' },
     body: JSON.stringify({ email, password }),
   });
   assert.equal(response.status, 200);

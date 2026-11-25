@@ -56,3 +56,9 @@ frontendGuide/
 # La documentación del backend sí se versiona.
 !backend/docs/
 !backend/docs/**
+
+# Informes de seguridad del proyecto.
+!/docs/
+/docs/*
+!/docs/security/
+!/docs/security/**

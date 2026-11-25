@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { ApiError } from "../lib/api";
+import { ApiError, SESSION_EXPIRED_EVENT } from "../lib/api";
 import {
   getCurrentUserRequest,
   loginRequest,
@@ -70,6 +70,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setUser(null);
+      setSessionNotice({
+        variant: "error",
+        message: "Tu sesión ha expirado. Inicia sesión nuevamente.",
+      });
+    };
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
     };
   }, []);
 

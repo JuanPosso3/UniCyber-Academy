@@ -2,6 +2,20 @@ packages:
   - backend
   - frontend
 
+overrides:
+  body-parser: 2.4.0
+  qs: 6.16.1
+  hono: 4.13.16
+  '@hono/node-server': 2.1.6
+  lodash: 4.18.1
+  valibot: 1.4.2
+  source-map-js: 1.2.2
+  sharp: 0.35.5
+  undici: 7.30.1
+  fast-xml-parser: 5.12.0
+  glob: 14.0.2
+  minimatch: 11.0.1
+
 allowBuilds:
   '@tailwindcss/oxide': true
   esbuild: true

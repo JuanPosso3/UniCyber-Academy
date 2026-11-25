@@ -12,6 +12,22 @@ const rawBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, "");
 
+/**
+ * Evento global que avisa al contexto de autenticación de que el backend
+ * ya no acepta la sesión (expiración, cuenta deshabilitada o cambio de
+ * contraseña). Las rutas de login, arranque y recuperación quedan fuera
+ * para no mostrar el aviso de expiración en esos casos.
+ */
+export const SESSION_EXPIRED_EVENT = "unicyber:session-expired";
+
+function shouldNotifySessionExpired(path: string): boolean {
+  return (
+    !path.startsWith("/auth/login") &&
+    !path.startsWith("/auth/me") &&
+    !path.startsWith("/auth/password-reset")
+  );
+}
+
 export interface ApiErrorPayload {
   error?: {
     code?: string;
@@ -60,6 +76,7 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
+  headers.set("X-UniCyber-Request", "1");
 
   if (options.body !== undefined && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
@@ -84,6 +101,14 @@ export async function apiRequest<T>(
   const body = await readBody(response);
 
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      shouldNotifySessionExpired(path) &&
+      typeof window !== "undefined"
+    ) {
+      window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+    }
+
     const payload = asErrorPayload(body);
 
     throw new ApiError(

@@ -46,14 +46,23 @@ export async function requireAuth(
   }
 
   // Invalida tokens emitidos antes de un cambio de contraseña, de modo
-  // que una contraseña cambiada invalide las sesiones previas.
-  if (
-    payload.iat &&
-    user.passwordChangedAt &&
-    payload.iat * 1000 < new Date(user.passwordChangedAt).getTime()
-  ) {
-    clearSessionCookie(res);
-    throw new AppError(401, 'UNAUTHENTICATED', UNAUTHENTICATED_MESSAGE);
+  // que una contraseña cambiada invalide las sesiones previas. Los tokens
+  // nuevos incluyen la marca exacta (`pwd`); los antiguos se comparan con
+  // `iat` como respaldo.
+  if (user.passwordChangedAt) {
+    const changedAt = new Date(user.passwordChangedAt).getTime();
+    const tokenChangedAt = payload.passwordChangedAt
+      ? new Date(payload.passwordChangedAt).getTime()
+      : Number.NaN;
+
+    const tokenIsStale = payload.passwordChangedAt
+      ? Number.isNaN(tokenChangedAt) || tokenChangedAt !== changedAt
+      : !payload.iat || payload.iat * 1000 < changedAt;
+
+    if (tokenIsStale) {
+      clearSessionCookie(res);
+      throw new AppError(401, 'UNAUTHENTICATED', UNAUTHENTICATED_MESSAGE);
+    }
   }
 
   (req as AuthenticatedRequest).authUser = user;

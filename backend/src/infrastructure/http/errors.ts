@@ -73,7 +73,18 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
-  console.error('Error no controlado:', error);
+  // En producción no se registra el objeto completo: algunos errores de
+  // base de datos o de terceros pueden incluir valores de parámetros.
+  if (process.env['NODE_ENV'] === 'production') {
+    const safeError = error as { name?: unknown; code?: unknown };
+
+    console.error('Error no controlado:', {
+      name: typeof safeError.name === 'string' ? safeError.name : 'Error',
+      code: typeof safeError.code === 'string' ? safeError.code : undefined,
+    });
+  } else {
+    console.error('Error no controlado:', error);
+  }
 
   res.status(500).json({
     error: {

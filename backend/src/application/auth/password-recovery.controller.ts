@@ -1,8 +1,17 @@
 import type { Request, Response } from 'express';
 import {
+  enforceRateLimit,
+  clientIp,
+} from '../../infrastructure/security/rate-limit.js';
+import {
   requestRecoveryCode as sendRecoveryCode,
   resetPasswordWithCode as performPasswordReset,
 } from './password-recovery.service.js';
+
+const RECOVERY_REQUEST_WINDOW_MS = 15 * 60 * 1000;
+const RECOVERY_REQUEST_MAX_PER_IP = 100;
+const RECOVERY_RESET_MAX_PER_EMAIL = 20;
+const RECOVERY_RESET_MAX_PER_IP = 100;
 
 function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -107,7 +116,21 @@ export async function requestRecoveryCode(
     return;
   }
 
-  await sendRecoveryCode(result.data.email);
+  await enforceRateLimit(
+    res,
+    `password-reset-request:ip:${clientIp(req)}`,
+    RECOVERY_REQUEST_MAX_PER_IP,
+    RECOVERY_REQUEST_WINDOW_MS,
+  );
+
+  // El trabajo real se ejecuta en segundo plano: la respuesta es idéntica
+  // y no espera al proveedor de correo. Cualquier fallo se registra sin
+  // datos personales y sin informar al cliente.
+  void sendRecoveryCode(result.data.email).catch(() => {
+    console.error(
+      'No se pudo completar la solicitud de recuperación de contraseña.',
+    );
+  });
 
   res.status(200).json({
     message: 'Si la cuenta existe y está activa, se ha enviado un código de recuperación a su correo.',
@@ -137,6 +160,22 @@ export async function resetPassword(
 
     return;
   }
+
+  const email = result.data.email;
+  const ip = clientIp(req);
+
+  await enforceRateLimit(
+    res,
+    `password-reset-confirm:email:${email}`,
+    RECOVERY_RESET_MAX_PER_EMAIL,
+    RECOVERY_REQUEST_WINDOW_MS,
+  );
+  await enforceRateLimit(
+    res,
+    `password-reset-confirm:ip:${ip}`,
+    RECOVERY_RESET_MAX_PER_IP,
+    RECOVERY_REQUEST_WINDOW_MS,
+  );
 
   await performPasswordReset(result.data);
 

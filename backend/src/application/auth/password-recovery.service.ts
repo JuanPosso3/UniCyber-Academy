@@ -1,6 +1,11 @@
 import { randomBytes } from 'node:crypto';
 import { db } from '../../prisma/db.js';
-import { hashPassword, verifyPassword } from '../../infrastructure/security/password.js';
+import {
+  getDummyPasswordHash,
+  hashPassword,
+  verifyPassword,
+} from '../../infrastructure/security/password.js';
+import { consumeRateLimit } from '../../infrastructure/security/rate-limit.js';
 import { AppError } from '../../infrastructure/http/errors.js';
 import { Resend } from 'resend';
 
@@ -14,20 +19,6 @@ const REQUEST_WINDOW_MS = 15 * 60 * 1000;
 // dominio verificado mediante RESEND_FROM_EMAIL.
 const RESEND_FROM_EMAIL =
   process.env['RESEND_FROM_EMAIL'] ?? 'onboarding@resend.dev';
-
-const RECOVERY_REQUEST_OK =
-  'Si la cuenta existe y está activa, se ha enviado un código de recuperación a su correo.';
-const RECOVERY_RESET_OK =
-  'Si el código es válido y no ha expirado, tu contraseña se ha actualizado.';
-const INVALID_OR_EXPIRED_CODE =
-  'El código es inválido o ha expirado. Solicita uno nuevo si lo necesitas.';
-
-interface RequestWindow {
-  count: number;
-  startedAt: number;
-}
-
-const requestWindows = new Map<string, RequestWindow>();
 
 let resendClient: Resend | null = null;
 
@@ -53,53 +44,43 @@ function generateRecoveryCode(): string {
 }
 
 /**
- * Controla cuántas solicitudes de recuperación acepta un correo dentro de
- * una ventana de tiempo. Al superar el límite se responde igual que en el
- * caso normal (sin enviar correo) para no revelar información de la cuenta.
+ * Consume tiempo de verificación aunque la cuenta o el código no existan.
+ * Reduce diferencias de temporización; no garantiza tiempo constante.
  */
-function isRequestAllowed(email: string): boolean {
-  const now = Date.now();
-  const current = requestWindows.get(email);
-
-  if (!current || now - current.startedAt > REQUEST_WINDOW_MS) {
-    requestWindows.set(email, { count: 1, startedAt: now });
-
-    return true;
-  }
-
-  if (current.count >= MAX_REQUESTS_PER_WINDOW) {
-    return false;
-  }
-
-  current.count += 1;
-
-  return true;
+async function performDummyVerification(code: string): Promise<void> {
+  await verifyPassword(code, await getDummyPasswordHash());
 }
 
 /**
  * Solicita un código de recuperación de contraseña.
  *
- * Siempre responde de forma genérica, independientemente de si el
- * correo existe, para evitar la enumeración de cuentas.
+ * No devuelve información sobre la existencia de la cuenta. El envío se
+ * ejecuta en segundo plano desde el controlador para que el tiempo de
+ * respuesta sea similar en todos los casos.
  */
 export async function requestRecoveryCode(
   email: string,
 ): Promise<void> {
   const normalizedEmail = email.trim().toLowerCase();
+  const limit = await consumeRateLimit(
+    `password-reset-request:email:${normalizedEmail}`,
+    MAX_REQUESTS_PER_WINDOW,
+    REQUEST_WINDOW_MS,
+  );
 
-  if (!isRequestAllowed(normalizedEmail)) {
+  if (!limit.allowed) {
     return;
   }
 
   const user = await db.orm.public.User
-    .where((user) => user.email.eq(normalizedEmail))
+    .where((candidate) => candidate.email.eq(normalizedEmail))
     .first();
 
-  if (!user) {
+  if (!user || user.status !== 'ACTIVE') {
     return;
   }
 
-  const userId = (user as { id: number }).id;
+  const userId = user.id;
 
   // Invalida códigos previos sin usar para este usuario y evita reenviar
   // correos mientras haya uno vigente.
@@ -134,15 +115,15 @@ export async function requestRecoveryCode(
     await sendRecoveryEmail(normalizedEmail, code);
   } catch {
     // Si el envío falla se elimina el código para que la persona pueda
-    // reintentar y no quede un código vigente que nunca llegó.
+    // reintentar y no quede un código vigente que nunca llegó. No se
+    // propaga el error al cliente para no revelar la existencia de la
+    // cuenta ni el estado del proveedor de correo.
     await db.orm.public.PasswordReset
       .where({ id: created.id })
       .deleteAll();
 
-    throw new AppError(
-      502,
-      'EMAIL_DELIVERY_FAILED',
-      'No se pudo enviar el correo de recuperación. Inténtalo de nuevo más tarde.',
+    console.error(
+      'No se pudo enviar el correo de recuperación de contraseña.',
     );
   }
 }
@@ -153,18 +134,16 @@ async function sendRecoveryEmail(email: string, code: string): Promise<void> {
     from: `UniCyber Academy <${RESEND_FROM_EMAIL}>`,
     to: [email],
     subject: 'Código de recuperación de contraseña — UniCyber Academy',
-    text: recoveryEmailText(email, code),
-    html: recoveryEmailHtml(email, code),
+    text: recoveryEmailText(code),
+    html: recoveryEmailHtml(code),
   });
 
   if (error) {
-    console.error('Resend rechazó el envío del correo de recuperación.');
-
     throw new Error('EMAIL_DELIVERY_FAILED');
   }
 }
 
-function recoveryEmailText(email: string, code: string): string {
+function recoveryEmailText(code: string): string {
   return `Hola,
 
 Has solicitado restablecer la contraseña de tu cuenta de UniCyber Academy.
@@ -178,7 +157,7 @@ Si no solicitaste este cambio, ignora este mensaje. Tu contraseña no se modific
 — Equipo de UniCyber Academy`;
 }
 
-function recoveryEmailHtml(email: string, code: string): string {
+function recoveryEmailHtml(code: string): string {
   return `
     <div style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1e293b; max-width: 560px; margin: 0 auto; padding: 24px;">
       <h2 style="color: #2563eb;">Restablecimiento de contraseña</h2>
@@ -216,14 +195,15 @@ export async function resetPasswordWithCode(input: {
   }
 
   const user = await db.orm.public.User
-    .where((user) => user.email.eq(normalizedEmail))
+    .where((candidate) => candidate.email.eq(normalizedEmail))
     .first();
 
-  if (!user) {
+  if (!user || user.status !== 'ACTIVE') {
+    await performDummyVerification(code);
     return;
   }
 
-  const userId = (user as { id: number }).id;
+  const userId = user.id;
 
   const reset = await db.orm.public.PasswordReset
     .where({ userId })
@@ -232,6 +212,7 @@ export async function resetPasswordWithCode(input: {
     .first();
 
   if (!reset) {
+    await performDummyVerification(code);
     return;
   }
 
@@ -245,30 +226,53 @@ export async function resetPasswordWithCode(input: {
   if (resetRow.attempts >= MAX_VERIFICATION_ATTEMPTS) {
     await db.orm.public.PasswordReset
       .where({ id: resetRow.id })
+      .where((row) => row.usedAt.isNull())
       .update({ usedAt: new Date().toISOString() });
+    await performDummyVerification(code);
+    return;
+  }
+
+  // Reserva un intento ANTES de verificar. Una petición que pierde la
+  // comparación atómica no obtiene una verificación gratuita del código.
+  const reserved = await db.orm.public.PasswordReset
+    .where({ id: resetRow.id })
+    .where((row) => row.usedAt.isNull())
+    .where((row) => row.expiresAt.gt(new Date().toISOString()))
+    .where((row) => row.attempts.eq(resetRow.attempts))
+    .update({ attempts: resetRow.attempts + 1 });
+
+  if (!reserved) {
+    await performDummyVerification(code);
     return;
   }
 
   const codeIsValid = await verifyPassword(code, resetRow.codeHash);
 
   if (!codeIsValid) {
-    await db.orm.public.PasswordReset
-      .where({ id: resetRow.id })
-      .update({ attempts: resetRow.attempts + 1 });
     return;
   }
 
   const now = new Date().toISOString();
+  const passwordHash = await hashPassword(newPassword);
 
+  // Consume el código y actualiza la contraseña en una sola transacción.
+  // La condición evita que dos peticiones concurrentes usen el mismo
+  // código más de una vez.
   await db.transaction(async (tx) => {
-    await tx.orm.public.PasswordReset
+    const claimed = await tx.orm.public.PasswordReset
       .where({ id: resetRow.id })
+      .where((row) => row.usedAt.isNull())
+      .where((row) => row.expiresAt.gt(new Date().toISOString()))
       .update({ usedAt: now });
+
+    if (!claimed) {
+      return;
+    }
 
     await tx.orm.public.User
       .where({ id: userId })
       .update({
-        passwordHash: await hashPassword(newPassword),
+        passwordHash,
         passwordChangedAt: now,
       });
   });
