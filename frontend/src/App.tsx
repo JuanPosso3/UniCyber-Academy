@@ -24,6 +24,7 @@ import { ModuleFormPage } from "./pages/admin/ModuleFormPage";
 import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
+import { DataProtectionPage } from "./pages/auth/DataProtectionPage";
 import { AssessmentPage } from "./pages/courses/AssessmentPage";
 import { AssessmentResultsPage } from "./pages/courses/AssessmentResultsPage";
 import { AchievementCollectionPage } from "./pages/achievements/AchievementCollectionPage";
@@ -78,6 +79,7 @@ function AppContent() {
     if (isBootstrapping) {
       return;
     }
+    if (route.name === "data-protection") return;
 
     const isPublicRoute =
       route.name === "login" ||
@@ -98,6 +100,8 @@ function AppContent() {
       replace("/courses");
     }
   }, [isBootstrapping, user, route, replace]);
+
+  if (route.name === "data-protection") return <DataProtectionPage />;
 
   if (isBootstrapping) {
     return (

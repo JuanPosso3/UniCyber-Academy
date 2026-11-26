@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, Lock, User } from "lucide-react";
+import { ArrowRight, Info, Lock, User } from "lucide-react";
+import { hasPasswordComplexity, PASSWORD_REQUIREMENTS } from "../../lib/password";
 import { AuthLayout } from "../../components/layout/AuthLayout";
 import { Alert } from "../../components/ui/Alert";
 import { Button } from "../../components/ui/Button";
@@ -56,6 +57,8 @@ function validateRegisterForm(values: {
   } else if (values.password.length > MAX_PASSWORD_LENGTH) {
     errors["password"] =
       `La contraseña no puede superar los ${MAX_PASSWORD_LENGTH} caracteres.`;
+  } else if (!hasPasswordComplexity(values.password)) {
+    errors["password"] = PASSWORD_REQUIREMENTS;
   }
 
   if (!values.confirmPassword) {
@@ -241,6 +244,13 @@ export function Register({ navigate }: RegisterProps) {
           required
         />
 
+        <div className="relative">
+        <details className="mb-2 text-xs text-muted-foreground">
+          <summary className="flex w-fit cursor-pointer items-center gap-1 rounded focus-visible:outline-2 focus-visible:outline-primary">
+            <Info size={14} aria-hidden="true" /> Requisitos de la contraseña
+          </summary>
+          <p className="mt-2 rounded-lg border border-border bg-background p-3">{PASSWORD_REQUIREMENTS}</p>
+        </details>
         <Input
           label="Contraseña"
           name="password"
@@ -254,6 +264,8 @@ export function Register({ navigate }: RegisterProps) {
           disabled={isSubmitting}
           required
         />
+
+        </div>
 
         <Input
           label="Confirmar contraseña"
@@ -273,16 +285,18 @@ export function Register({ navigate }: RegisterProps) {
           <label className="flex items-start gap-2 cursor-pointer">
             <input
               type="checkbox"
+              required
+              aria-invalid={Boolean(fieldErrors["terms"])}
               checked={agreed}
               onChange={(event) => setAgreed(event.target.checked)}
               className="mt-0.5 accent-primary"
               disabled={isSubmitting}
             />
             <span className="text-xs text-muted-foreground">
-              Acepto los{" "}
-              <span className="text-primary">términos y condiciones</span> y
+              Acepto las{" "}
+              <a href="/data-protection#conditions" target="_blank" rel="noopener noreferrer" className="text-accent underline" aria-label="Condiciones de tratamiento de datos (abre otra pestaña)">condiciones de tratamiento de datos</a> y
               la{" "}
-              <span className="text-primary">política de privacidad</span>
+              <a href="/data-protection" target="_blank" rel="noopener noreferrer" className="text-accent underline" aria-label="Política de privacidad (abre otra pestaña)">política de privacidad</a>
             </span>
           </label>
           {fieldErrors["terms"] && (

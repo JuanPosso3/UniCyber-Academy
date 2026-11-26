@@ -156,12 +156,23 @@ test(
         {
           cookie: admin.cookie,
           method: 'PATCH',
-          body: { username: `${originalUsername}-editado`, role: 'MENTOR' },
+          body: { username: `${originalUsername}-editado`, role: 'admin' },
         },
       );
       assert.equal(updated.status, 200);
       assert.equal(updated.body.user.username, `${originalUsername}-editado`);
-      assert.equal(updated.body.user.role, 'MENTOR');
+      assert.equal(updated.body.user.role, 'ADMINISTRATIVE');
+      for (const role of ['MENTOR', 'TEACHER', 'VISITOR', 'superadmin']) {
+        const rejected = await requestJson<ApiErrorResponse>(`/admin/users/${student.id}`, {
+          cookie: admin.cookie, method: 'PATCH', body: { role },
+        });
+        assert.equal(rejected.status, 400);
+        assert.equal(rejected.body.error.code, 'INVALID_ROLE');
+      }
+      const demoted = await requestJson<UserResponse>(`/admin/users/${student.id}`, {
+        cookie: admin.cookie, method: 'PATCH', body: { role: 'student' },
+      });
+      assert.equal(demoted.body.user.role, 'STUDENT');
 
       // No se permite cambiar el propio rol.
       const selfRole = await requestJson<ApiErrorResponse>(

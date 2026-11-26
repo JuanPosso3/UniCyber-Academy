@@ -75,6 +75,7 @@ export function Login({ navigate }: LoginProps) {
 
   return (
     <AuthLayout
+      featured
       title="Bienvenido de vuelta"
       subtitle="Inicia sesión en tu cuenta"
       footer={

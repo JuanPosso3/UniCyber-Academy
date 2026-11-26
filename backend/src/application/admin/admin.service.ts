@@ -1,6 +1,6 @@
 import { db } from '../../prisma/db.js';
 import { AppError } from '../../infrastructure/http/errors.js';
-import { isAdminRole, isUserRole } from '../../domain/user.js';
+import { isAdminRole } from '../../domain/user.js';
 import type { ContentStatus } from '../../domain/content.js';
 import type {
   AdminDashboardStatistics,
@@ -425,6 +425,10 @@ export async function updateManagedUser(
   userId: number,
   input: UpdateManagedUserInput,
 ): Promise<AdminUserSummary> {
+  const role = input.role === 'admin' ? 'ADMINISTRATIVE' : input.role === 'student' ? 'STUDENT' : input.role;
+  if (role !== undefined && role !== 'ADMINISTRATIVE' && role !== 'STUDENT') {
+    throw new AppError(400, 'INVALID_ROLE', INVALID_ROLE);
+  }
   const target = await db.orm.public.User.first({ id: userId });
 
   if (!target) {
@@ -459,20 +463,16 @@ export async function updateManagedUser(
     changes['username'] = username;
   }
 
-  if (input.role !== undefined && input.role !== target.role) {
+  if (role !== undefined && role !== target.role) {
     if (userId === actorId) {
       throw new AppError(400, 'SELF_ROLE_CHANGE', SELF_ROLE_MESSAGE);
-    }
-
-    if (!isUserRole(input.role)) {
-      throw new AppError(400, 'INVALID_ROLE', INVALID_ROLE);
     }
 
     const targetIsActiveAdmin =
       isAdminRole(target.role as AdminUserSummary['role']) &&
       target.status === 'ACTIVE';
 
-    if (targetIsActiveAdmin && !isAdminRole(input.role)) {
+    if (targetIsActiveAdmin && !isAdminRole(role)) {
       const activeAdmins = await db.orm.public.User
         .where((user) => user.role.eq('ADMINISTRATIVE'))
         .where((user) => user.status.eq('ACTIVE'))
@@ -483,7 +483,7 @@ export async function updateManagedUser(
       }
     }
 
-    changes['role'] = input.role;
+    changes['role'] = role;
   }
 
   if (Object.keys(changes).length === 0) {

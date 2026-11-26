@@ -56,7 +56,7 @@ test('autenticación, autorización, propiedad, revocación y recuperación en b
   await new Promise<void>(resolve => server.once('listening', resolve));
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
   const email = `seguridad-${Date.now()}@example.test`;
-  const password = 'PruebaFicticiaSegura123';
+  const password = 'PruebaFicticiaSegura123!';
   const ids: number[] = [];
   async function request(path: string, method = 'GET', body?: unknown, cookie?: string) {
     return fetch(`${base}${path}`, {
@@ -68,6 +68,12 @@ test('autenticación, autorización, propiedad, revocación y recuperación en b
     return request('/auth/login', 'POST', { email, password: value });
   }
   try {
+    for (const weak of ['Ab1!', 'minuscula1!', 'MAYUSCULA1!', 'SinNumeros!', 'SinSimbolos1']) {
+      const rejected = await request('/auth/register', 'POST', {
+        firstName: 'Persona', lastName: 'Ficticia', email, password: weak,
+      });
+      assert.equal(rejected.status, 400);
+    }
     const registered = await request('/auth/register', 'POST', {
       firstName: 'Persona', lastName: 'Ficticia', email, password, role: 'ADMINISTRATIVE',
     });

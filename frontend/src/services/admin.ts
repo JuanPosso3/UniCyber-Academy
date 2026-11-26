@@ -80,6 +80,6 @@ export function updateAdminUserRequest(
 ): Promise<AdminUser> {
   return apiRequest<{ user: AdminUser }>(`/admin/users/${userId}`, {
     method: "PATCH",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, role: payload.role === undefined ? undefined : payload.role === "ADMINISTRATIVE" ? "admin" : payload.role === "STUDENT" ? "student" : payload.role }),
   }).then((response) => response.user);
 }

@@ -62,6 +62,8 @@ la gestión de cursos.
 
 - Consume `GET /api/courses`.
 - Presenta tarjetas con título, descripción y cantidad de módulos publicados.
+- Muestra avance personal: Completado, En progreso o No iniciado; véase
+  `COURSE_PROGRESS_STATUS.md` para fuentes y reglas.
 - Permite buscar por título o descripción en el cliente.
 - Distingue carga, error, catálogo vacío y búsqueda sin coincidencias.
 - No muestra cursos en borrador o archivados; el backend ya los excluye.
@@ -84,8 +86,8 @@ la gestión de cursos.
 - “Publicar” ejecuta `PATCH /api/admin/courses/:id/status` con `ACTIVE`.
 - “Archivar” abre un diálogo de confirmación y ejecuta el mismo endpoint con
   `ARCHIVED`.
-- Los cursos archivados permanecen visibles para administración, sin acción de
-  restauración.
+- Los cursos archivados ofrecen Reactivar curso; se reutiliza el endpoint de
+  estado con ACTIVE. Véase `ARCHIVED_CONTENT_REACTIVATION.md`.
 - No existe botón de eliminación.
 
 ### Formularios de curso
@@ -107,6 +109,7 @@ la gestión de cursos.
 - El reordenamiento usa `PATCH .../order` con `up` o `down`.
 - Los controles de borde se deshabilitan en el primer/último módulo.
 - “Archivar” abre un diálogo de confirmación.
+- “Reactivar módulo” vuelve a ACTIVE si el curso no está archivado.
 - Si el curso está archivado, se muestra una advertencia y se deshabilitan las
   acciones de módulos, en línea con la validación del backend.
 

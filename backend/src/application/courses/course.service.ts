@@ -281,7 +281,7 @@ export async function changeCourseStatus(
 ): Promise<CourseSummary> {
   const course = await findCourse(courseId);
 
-  if (!canTransitionContent(course.status, nextStatus)) {
+  if (!canTransitionContent(course.status, nextStatus, true)) {
     invalidStatusTransition();
   }
 
@@ -416,7 +416,7 @@ export async function changeModuleStatus(
 
   const module = await findModule(courseId, moduleId);
 
-  if (!canTransitionContent(module.status, nextStatus)) {
+  if (!canTransitionContent(module.status, nextStatus, true)) {
     invalidStatusTransition();
   }
 

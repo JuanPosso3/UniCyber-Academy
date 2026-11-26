@@ -125,7 +125,7 @@ test('limitador local responde 429 y Retry-After; no prueba distribución', asyn
 });
 
 test('validación descarta asignación de rol y rechaza tipos incorrectos', () => {
-  const registration = validateRegister({ firstName: 'Persona', lastName: 'Ficticia', email: 'ficticia@example.test', password: 'SoloParaPrueba123', role: 'ADMINISTRATIVE', status: 'ACTIVE' });
+  const registration = validateRegister({ firstName: 'Persona', lastName: 'Ficticia', email: 'ficticia@example.test', password: 'SoloParaPrueba123!', role: 'ADMINISTRATIVE', status: 'ACTIVE' });
   assert.ok(registration.ok);
   if (registration.ok) assert.equal('role' in registration.data, false);
   assert.equal(validateLogin({ email: { $ne: null }, password: [] }).ok, false);

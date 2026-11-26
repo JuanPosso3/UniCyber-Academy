@@ -34,16 +34,13 @@ export interface AdminStatisticsPageProps {
   navigate: NavigateFn;
 }
 
-const ROLE_OPTIONS: Array<{ value: UserRole; label: string }> = [
-  { value: "STUDENT", label: "Estudiante" },
-  { value: "TEACHER", label: "Docente" },
-  { value: "ADMINISTRATIVE", label: "Administrador" },
-  { value: "VISITOR", label: "Visitante" },
-  { value: "MENTOR", label: "Mentor" },
+const ROLE_OPTIONS = [
+  { value: "student", label: "Estudiante" },
+  { value: "admin", label: "Administrador" },
 ];
 
 const ROLE_LABELS: Record<string, string> = Object.fromEntries(
-  ROLE_OPTIONS.map((role) => [role.value, role.label]),
+  [["STUDENT", "Estudiante"], ["ADMINISTRATIVE", "Administrador"]],
 );
 
 function StatCard({
@@ -523,12 +520,13 @@ export function AdminStatisticsPage({ navigate }: AdminStatisticsPageProps) {
                           {isEditing ? (
                             <select
                               aria-label={`Rol de ${fullName}`}
-                              value={draftRole}
+                              value={draftRole === "ADMINISTRATIVE" ? "admin" : draftRole === "STUDENT" ? "student" : ""}
                               onChange={(event) =>
-                                setDraftRole(event.target.value as UserRole)
+                                setDraftRole(event.target.value === "admin" ? "ADMINISTRATIVE" : "STUDENT")
                               }
                               className="rounded-xl border border-border bg-card px-2 py-1.5 text-xs text-white focus:border-primary/50 focus:outline-none"
                             >
+                              {draftRole !== "ADMINISTRATIVE" && draftRole !== "STUDENT" && <option value="" disabled>Selecciona un rol compatible</option>}
                               {ROLE_OPTIONS.map((role) => (
                                 <option key={role.value} value={role.value}>
                                   {role.label}
@@ -545,7 +543,7 @@ export function AdminStatisticsPage({ navigate }: AdminStatisticsPageProps) {
                                     : "gray"
                               }
                             >
-                              {ROLE_LABELS[user.role] ?? user.role}
+                              {ROLE_LABELS[user.role] ?? "Rol heredado (pendiente de revisión)"}
                             </Badge>
                           )}
                         </td>

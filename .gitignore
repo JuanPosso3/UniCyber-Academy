@@ -57,6 +57,19 @@ frontendGuide/
 !backend/docs/
 !backend/docs/**
 
+# Documentación de las mejoras de interfaz y seguridad.
+!frontend/docs/
+frontend/docs/*
+!frontend/docs/LOGIN_UI_IMPROVEMENTS.md
+!frontend/docs/COURSE_PROGRESS_STATUS.md
+!frontend/docs/ARCHIVED_CONTENT_REACTIVATION.md
+!frontend/docs/REGISTRATION_PASSWORD_VALIDATION.md
+!frontend/docs/USER_ROLE_MANAGEMENT.md
+!frontend/docs/DATA_PROTECTION_POLICY.md
+!frontend/docs/IMPLEMENTATION_VALIDATION.md
+!frontend/docs/COURSE_CATALOG_AND_MODULE_MANAGEMENT.md
+!frontend/docs/ADMINISTRATIVE_DASHBOARD.md
+
 # Informes de seguridad del proyecto.
 !/docs/
 /docs/*

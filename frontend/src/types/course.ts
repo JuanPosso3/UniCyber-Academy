@@ -1,6 +1,7 @@
 export type ContentStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 
 export interface CourseSummary {
+  progressStatus?: "completed" | "in_progress" | "not_started";
   id: number;
   title: string;
   description: string | null;

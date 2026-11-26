@@ -5,6 +5,8 @@
  * experiencia, pero estas reglas son las que protegen la API.
  */
 
+import { hasPasswordComplexity, PASSWORD_REQUIREMENTS } from '../../domain/password-policy.js';
+
 export interface RegisterInput {
   firstName: string;
   lastName: string;
@@ -85,6 +87,8 @@ export function validateRegister(
   } else if (password.length > MAX_PASSWORD_LENGTH) {
     errors['password'] =
       `La contraseña no puede superar los ${MAX_PASSWORD_LENGTH} caracteres.`;
+  } else if (!hasPasswordComplexity(password)) {
+    errors['password'] = PASSWORD_REQUIREMENTS;
   }
 
   if (Object.keys(errors).length > 0) {

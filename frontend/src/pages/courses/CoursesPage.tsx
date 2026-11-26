@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen, Layers, Search } from "lucide-react";
 import { AuthenticatedLayout } from "../../components/layout/AuthenticatedLayout";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
 import { StatePanel } from "../../components/ui/StatePanel";
 import { ApiError } from "../../lib/api";
 import { listAvailableCoursesRequest } from "../../services/courses";
@@ -176,6 +177,11 @@ export function CoursesPage({ navigate }: CoursesPageProps) {
                   </span>
                 </div>
 
+                <div className="mb-3">
+                  <Badge color={course.progressStatus === "completed" ? "green" : course.progressStatus === "in_progress" ? "blue" : "gray"}>
+                    {course.progressStatus === "completed" ? "Completado" : course.progressStatus === "in_progress" ? "En progreso" : "No iniciado"}
+                  </Badge>
+                </div>
                 <h2 className="text-base font-semibold text-white">
                   {course.title}
                 </h2>

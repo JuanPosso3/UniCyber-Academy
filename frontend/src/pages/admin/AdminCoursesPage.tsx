@@ -337,7 +337,7 @@ export function AdminCoursesPage({ navigate }: AdminCoursesPageProps) {
                     </div>
 
                     <div className="flex flex-wrap gap-2 lg:justify-end">
-                      {course.status === "DRAFT" && (
+                      {course.status !== "ACTIVE" && (
                         <Button
                           type="button"
                           variant="primary"
@@ -347,7 +347,7 @@ export function AdminCoursesPage({ navigate }: AdminCoursesPageProps) {
                             void changeStatus(course, "ACTIVE");
                           }}
                         >
-                          <Send size={14} /> Publicar
+                          <Send size={14} /> {course.status === "ARCHIVED" ? "Reactivar curso" : "Publicar"}
                         </Button>
                       )}
 

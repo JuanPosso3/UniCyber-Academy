@@ -1,4 +1,25 @@
-# Catálogo de cursos y administración de módulos — backend
+# Catálogo de cursos y administración de módulos - backend
+
+## Actualización: reactivación y avance personal (noviembre de 2026)
+
+Esta sección sustituye las restricciones históricas de restauración descritas
+más abajo. `canTransitionContent` permite ahora `ARCHIVED → ACTIVE` para cursos
+y módulos, mediante los mismos endpoints PATCH `/status`, protegidos con
+`requireAuth` y `requireAdmin`. Solo se actualiza el estado; no se eliminan
+módulos, lecciones, progreso ni intentos. Un módulo no puede reactivarse si su
+curso está archivado (`409 COURSE_ARCHIVED`). Reactivar el padre no modifica
+el estado de los hijos. La visibilidad exige padres y contenido activos.
+
+`GET /api/courses` agrega `progressStatus` (`completed`, `in_progress`,
+`not_started`) calculado mediante el detalle académico existente para el usuario
+autenticado. No acepta un identificador de usuario externo ni crea tablas.
+Los detalles de cálculo y actualización están en
+`../../frontend/docs/COURSE_PROGRESS_STATUS.md`.
+
+Las pruebas de cursos verifican reactivación, bloqueo por padre archivado y
+visibilidad posterior; las de evaluación comprueban avance e independencia
+entre cuentas. Resultados actuales en
+`../../frontend/docs/IMPLEMENTATION_VALIDATION.md`.
 
 Implementación del **2026-10-21**. Complementa `docs/AUTH_INTEGRATION.md` y la
 documentación histórica del backend.

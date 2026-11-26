@@ -1,4 +1,6 @@
 import type { Request, Response } from 'express';
+import type { AuthenticatedRequest } from '../../infrastructure/http/auth.middleware.js';
+import { getStudentCourseDetail } from '../lessons/lesson.service.js';
 import { AppError } from '../../infrastructure/http/errors.js';
 import {
   changeCourseStatus as changeCourseStatusService,
@@ -56,12 +58,22 @@ function sendValidationErrors(
 /* ------------------------------- Estudiantes ------------------------------ */
 
 export async function listAvailableCourses(
-  _req: Request,
+  req: Request,
   res: Response,
 ): Promise<void> {
   const courses = await listAvailableCoursesService();
 
-  res.status(200).json({ courses });
+  const userId = (req as AuthenticatedRequest).authUser.id;
+  const personalizedCourses = await Promise.all(courses.map(async (course) => {
+    const learning = await getStudentCourseDetail(course.id, userId);
+    const progressStatus = learning.assessment?.passed
+      ? 'completed'
+      : learning.progress.completedLessons > 0 || learning.assessment?.attempted
+        ? 'in_progress'
+        : 'not_started';
+    return { ...course, progressStatus };
+  }));
+  res.status(200).json({ courses: personalizedCourses });
 }
 
 export async function getAvailableCourse(

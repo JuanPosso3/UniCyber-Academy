@@ -62,6 +62,11 @@ export async function updateUser(
     : {}) as Record<string, unknown>;
   const input: { username?: string; role?: string } = {};
 
+  if ('role' in body && typeof body['role'] !== 'string') {
+    res.status(400).json({ error: { code: 'INVALID_ROLE', message: 'El rol no es válido.' } });
+    return;
+  }
+
   if (typeof body['username'] === 'string') {
     input.username = body['username'];
   }

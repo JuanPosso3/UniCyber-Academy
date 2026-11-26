@@ -365,7 +365,12 @@ test(
         'COURSE_ARCHIVED',
       );
 
-      const invalidRestore = await requestJson<ApiErrorResponse>(
+      const blockedModuleRestore = await requestJson<ApiErrorResponse>(
+        `/admin/courses/${courseId}/modules/${firstModule.body.module.id}/status`,
+        { cookie: adminCookie, method: 'PATCH', body: { status: 'ACTIVE' } },
+      );
+      assert.equal(blockedModuleRestore.status, 409);
+      const restored = await requestJson<CourseResponse>(
         `/admin/courses/${courseId}/status`,
         {
           cookie: adminCookie,
@@ -373,11 +378,16 @@ test(
           body: { status: 'ACTIVE' },
         },
       );
-      assert.equal(invalidRestore.status, 409);
-      assert.equal(
-        invalidRestore.body.error.code,
-        'INVALID_STATUS_TRANSITION',
+      assert.equal(restored.status, 200);
+      assert.equal(restored.body.course.status, 'ACTIVE');
+      const restoredModule = await requestJson<ModuleResponse>(
+        `/admin/courses/${courseId}/modules/${firstModule.body.module.id}/status`,
+        { cookie: adminCookie, method: 'PATCH', body: { status: 'ACTIVE' } },
       );
+      assert.equal(restoredModule.status, 200);
+      const visibleAgain = await requestJson<CourseDetailResponse>(`/courses/${courseId}`, { cookie: studentCookie });
+      assert.equal(visibleAgain.body.course.modules.length, 2);
+      assert.ok(visibleAgain.body.course.modules.some(module => module.id === firstModule.body.module.id));
     } finally {
       if (server) {
         await new Promise<void>((resolve) => {

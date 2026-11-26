@@ -1,4 +1,5 @@
 export type AppRoute =
+  | { name: "data-protection" }
   | { name: "login" }
   | { name: "register" }
   | { name: "forgot-password" }
@@ -62,6 +63,9 @@ function parseId(value: string | undefined): number | null {
 
 export function parseRoute(pathname: string): AppRoute {
   const normalized = pathname.replace(/\/+$/, "") || "/";
+  if (normalized === "/data-protection") {
+    return { name: "data-protection" };
+  }
 
   if (normalized === "/login") {
     return { name: "login" };

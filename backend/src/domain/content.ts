@@ -23,12 +23,13 @@ export function isContentStatus(value: unknown): value is ContentStatus {
 
 /**
  * Un borrador puede publicarse o archivarse. Un curso o módulo activo
- * puede archivarse. La restauración de contenido archivado no forma
- * parte de esta funcionalidad y no se inventa aquí.
+ * puede archivarse. Un contenido archivado puede reactivarse sin
+ * modificar sus relaciones ni el estado de sus descendientes.
  */
 export function canTransitionContent(
   current: ContentStatus,
   next: ContentStatus,
+  allowReactivation = false,
 ): boolean {
   if (current === next) {
     return false;
@@ -42,7 +43,7 @@ export function canTransitionContent(
     return next === 'ARCHIVED';
   }
 
-  return false;
+  return allowReactivation && current === 'ARCHIVED' && next === 'ACTIVE';
 }
 
 export function isAvailableToStudents(

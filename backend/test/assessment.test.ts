@@ -288,6 +288,12 @@ test(
       );
       assert.equal(publishModule.status, 200);
 
+      const catalogStatus = async (cookie: string) => {
+        const response = await requestJson<{ courses: Array<{ id: number; progressStatus: string }> }>('/courses', { cookie });
+        assert.equal(response.status, 200);
+        return response.body.courses.find(course => course.id === courseId)?.progressStatus;
+      };
+      assert.equal(await catalogStatus(studentCookie), 'not_started');
       for (const lessonId of lessonIds) {
         let publishLesson: { status: number; body: unknown } | null = null;
         publishLesson = await requestJson<unknown>(
@@ -391,7 +397,9 @@ test(
           { cookie: studentCookie, method: 'POST' },
         );
         assert.equal(completeLesson!.status, 200);
+        assert.equal(await catalogStatus(studentCookie), 'in_progress');
       }
+      assert.equal(await catalogStatus(adminCookie), 'not_started');
 
       const eligible = await requestJson<StudentAssessmentView>(
         `/courses/${courseId}/assessment`,
@@ -472,6 +480,8 @@ test(
       assert.equal(passingAttempt.body.results.attempt!.correctAnswers, 8);
       assert.equal(passingAttempt.body.results.attempt!.score, 100);
       assert.equal(passingAttempt.body.results.attempt!.passed, true);
+      assert.equal(await catalogStatus(studentCookie), 'completed');
+      assert.equal(await catalogStatus(adminCookie), 'not_started');
       assert.ok(
         passingAttempt.body.results.questions.every(
           (review) => review.answeredCorrectly && review.explanation !== null,

@@ -375,7 +375,7 @@ export function CourseModulesPage({
                           <FileText size={14} /> Lecciones
                         </Button>
 
-                        {module.status === "DRAFT" && (
+                        {module.status !== "ACTIVE" && (
                           <Button
                             type="button"
                             variant="primary"
@@ -385,7 +385,7 @@ export function CourseModulesPage({
                               void changeStatus(module, "ACTIVE");
                             }}
                           >
-                            <Send size={14} /> Publicar
+                            <Send size={14} /> {module.status === "ARCHIVED" ? "Reactivar módulo" : "Publicar"}
                           </Button>
                         )}
 
