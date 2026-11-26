@@ -1,123 +1,102 @@
-# Recuperación de contraseña con Resend
+# Recuperación de contraseña mediante Google Apps Script
 
-## Dependencia y configuración
+## Propósito y flujo
 
-El backend usa el SDK oficial de Resend (`resend`), instalado en
-`backend/package.json`. El cliente se inicializa únicamente en el backend.
+La pantalla existente `/forgot-password` permite solicitar un código y enviar
+después el código con una nueva contraseña. La interfaz, las rutas y los
+contratos públicos no cambiaron al sustituir el proveedor de correo.
 
-Variables de entorno:
+1. `POST /api/auth/password-reset/request` valida y normaliza el correo.
+2. Se aplican los límites de solicitudes; solo una cuenta activa puede recibir
+   un código. La respuesta es genérica para cuentas existentes, inexistentes o
+   deshabilitadas y no espera al envío en segundo plano.
+3. `crypto.randomBytes(4).toString('hex')` genera ocho caracteres hexadecimales.
+   `hashPassword` guarda únicamente su hash **scrypt**, con sal aleatoria, en
+   el modelo existente `PasswordReset`.
+4. Se crea el registro con vigencia de **15 minutos** y se envía el código al
+   Apps Script existente mediante HTTPS. No se usa SMTP ni el SDK anterior.
+5. `POST /api/auth/password-reset/reset` recibe `email`, `code`, `newPassword`
+   y `confirmPassword`. Verifica vigencia, intentos y hash; contraseña y
+   confirmación deben coincidir y tener entre 8 y 128 caracteres.
+6. Una transacción reclama el código mediante `usedAt IS NULL` y expiración,
+   actualiza `passwordHash` con scrypt y `passwordChangedAt`. Dos solicitudes
+   no pueden consumir el mismo código correctamente. Los JWT anteriores
+   quedan invalidados por los controles existentes de autenticación.
 
-| Variable | Obligatoria | Uso |
-| --- | --- | --- |
-| `RESEND_API_KEY` | Sí | Autenticación con Resend. Ya existe en `backend/.env`. No se expone al frontend ni se registra en logs. |
-| `RESEND_FROM_EMAIL` | Recomendada | Dirección remitente. Si no se define se usa `onboarding@resend.dev`, remitente de pruebas de Resend. En producción debe configurarse un remitente de un dominio verificado en Resend. |
+## Respuestas y privacidad
 
-Si falta `RESEND_API_KEY`, el servicio responde con un error interno genérico
-(`EMAIL_NOT_CONFIGURED`) sin revelar la clave.
+Se conservan los mensajes públicos existentes:
 
-## Flujo
+- Solicitud: «Si la cuenta existe y está activa, se ha enviado un código de
+  recuperación a su correo.»
+- Restablecimiento: «Si el código es válido y no ha expirado, tu contraseña se
+  ha actualizado.»
 
-1. La persona indica su correo en `/forgot-password`.
-2. `POST /api/auth/password-reset/request` normaliza el correo y busca la
-   cuenta.
-3. Si la cuenta existe, se genera un código aleatorio criptográficamente seguro
-   con `crypto.randomBytes(4)` (8 caracteres hexadecimales).
-4. Se guarda **solo el hash bcrypt** del código en `PasswordReset.codeHash`,
-   junto con `expiresAt`.
-5. Se envía el código por Resend a la dirección registrada.
-6. La persona ingresa el código y la nueva contraseña en el frontend.
-7. `POST /api/auth/password-reset/reset` valida código, expiración, intentos y
-   uso previo.
-8. Si es válido, se marca el código como usado y se actualiza `passwordHash`
-   con el hash existente de autenticación y `passwordChangedAt`.
-9. Los tokens emitidos antes del cambio dejan de ser válidos.
+Son respuestas genéricas, no comprobantes de envío ni de cambio. Un fallo del
+proveedor no produce una respuesta distinta por cuenta ni devuelve su cuerpo.
+Los errores de validación de formato mantienen `400 VALIDATION_ERROR`.
+Los límites por IP conservan su respuesta `429`.
 
-## Endpoints
+## Controles preservados
 
-| Método | Ruta | Autenticación |
-| --- | --- | --- |
-| `POST` | `/api/auth/password-reset/request` | Pública |
-| `POST` | `/api/auth/password-reset/reset` | Pública |
+- Máximo **tres solicitudes por correo normalizado en 15 minutos**, mediante
+  `consumeRateLimit` **antes** de consultar la cuenta. También se cuentan las
+  solicitudes sin cuenta elegible, con código vigente o con fallo de envío.
+- Mientras exista un código no usado y vigente no se envía otro.
+- La emisión vuelve a comprobar esa condición dentro de una transacción,
+  bloqueando la fila de usuario (`SELECT ... FOR UPDATE`) para serializar
+  solicitudes simultáneas. El bloqueo no incluye la llamada HTTP.
+- Solo se eliminan códigos anteriores **no usados y caducados** al emitir uno
+  nuevo. La comprobación transaccional evita invalidar un código vigente
+  creado concurrentemente. Los usados no se borran por esta operación.
+- Máximo **cinco verificaciones por código**. Se reserva el intento antes de
+  ejecutar scrypt, mediante actualización condicional del contador. Una
+  solicitud que pierde la comparación atómica no verifica gratis el código.
+  Al llegar a cinco, el código queda agotado; una consulta posterior marca
+  `usedAt` y no lo acepta aunque el texto sea correcto.
+- Consumo y actualización de contraseña en una sola transacción; si falla la
+  escritura, se revierte la transacción. Se conservan verificaciones ficticias
+  para reducir diferencias temporales sin afirmar tiempo constante.
+- Se conservan los límites adicionales por IP y por correo del controlador,
+  CSRF y las reglas existentes de sesión.
 
-### Solicitud
+## Persistencia y fallos de entrega
 
-```json
-{ "email": "usuario@example.com" }
-```
+No se cambió `PasswordReset`, el contrato Prisma ORM 8 ni la configuración de
+Neon; no se crearon migraciones. El código original solo existe temporalmente
+en memoria y en la petición HTTPS al proveedor, nunca en una columna legible.
 
-Respuesta genérica (exista o no la cuenta):
+`sendRecoveryEmail` utiliza `MAIL_API_URL` y `MAIL_API_SECRET` únicamente en el
+backend. Todo resultado distinto de HTTP satisfactorio y JSON con
+`success: true` se considera fallo. Hay un límite de diez segundos y no hay
+reintentos automáticos. Véase `GOOGLE_APPS_SCRIPT_EMAIL_INTEGRATION.md`.
 
-```json
-{
-  "message": "Si la cuenta existe y está activa, se ha enviado un código de recuperación a su correo."
-}
-```
+Ante fallo, el servicio elimina **solo `created.id`**, no todos los registros
+de la cuenta. Una petición anterior fallida no puede eliminar un registro
+posterior por compartir usuario. La eliminación no reinicia el limitador,
+porque su estado vive separado de `PasswordReset`. Se registra únicamente un
+mensaje genérico. Si falla la propia limpieza de base de datos, el controlador
+conserva su registro genérico de error; podría quedar un código bloqueando
+nuevas emisiones hasta caducar. No se afirma entrega ni se expone el fallo al
+cliente.
 
-### Restablecimiento
+## Pruebas y límites conocidos
 
-```json
-{
-  "email": "usuario@example.com",
-  "code": "1a2b3c4d",
-  "newPassword": "NuevaClave123",
-  "confirmPassword": "NuevaClave123"
-}
-```
+`pnpm --filter backend test:recovery` prueba transporte simulado, configuración,
+redirecciones, fallos y timeout, hash y vigencia, límites, limpieza por ID,
+cuentas no elegibles, respuestas genéricas y concurrencia de emisión y consumo.
+No envía correos reales. Los resultados ejecutados están en el documento de
+integración.
 
-La respuesta también es genérica y no confirma si el código era correcto.
-
-## Reglas de seguridad
-
-- **Expiración:** 15 minutos (`CODE_TTL_MS`).
-- **Uso único:** `usedAt` marca el código como consumido; no se reutiliza.
-- **Intentos de verificación:** máximo 5 por código. Al superarlo el código se
-  invalida.
-- **Solicitudes repetidas:** máximo 3 solicitudes por correo en una ventana de
-  15 minutos. Al superar el límite se responde igual que en el caso normal y no
-  se envía correo. Mientras exista un código vigente no se emite otro.
-- **Enumeración de cuentas:** las respuestas públicas son genéricas.
-- **Códigos previos:** al emitir uno nuevo se eliminan los códigos no usados
-  del usuario.
-- **Errores de Resend:** si el proveedor rechaza el envío, el código recién
-  creado se elimina y se responde `502` con un mensaje genérico. No se informa
-  un envío exitoso cuando el proveedor falló.
-- **Contraseñas:** se validan entre 8 y 128 caracteres, deben coincidir y se
-  almacenan con el hash existente. Nunca se guardan en texto plano.
-- **Sesiones:** `passwordChangedAt` invalida tokens anteriores.
-
-## Persistencia
-
-Se añadió el modelo mínimo `PasswordReset`:
-
-```prisma
-model PasswordReset {
-  id        Int   @id @default(autoincrement())
-  userId    Int
-  codeHash  String
-  expiresAt TimestamptzString
-  usedAt    TimestamptzString?
-  attempts  Int   @default(0)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-}
-```
-
-No se usa eliminación en cascada. Los códigos se eliminan manualmente cuando
-corresponde (por ejemplo, al emitir uno nuevo).
-
-## Plantilla de correo
-
-El correo se redacta íntegramente en español e incluye:
-
-- Identificación de UniCyber Academy.
-- Explicación de que se solicitó un restablecimiento.
-- El código en un bloque destacado.
-- Vigencia de 15 minutos y uso único.
-- Advertencia para ignorar el mensaje si no se solicitó el cambio.
-
-## Verificación
-
-El flujo fue probado contra la base de datos local (validación de códigos,
-expiración, intentos y cambio de contraseña). El envío real de correo depende de
-credenciales válidas de Resend y de un remitente verificado; no se incluyen
-credenciales reales en esta documentación.
+- El limitador conserva sus dos modos. `memory` es local al proceso y pierde
+  estado al reiniciar; `postgres` requiere la tabla y configuración existentes.
+  Esta migración no cambia ese despliegue ni garantiza coordinación entre
+  instancias si se mantiene el modo local.
+- El trabajo de envío en segundo plano no es una cola durable. Un reinicio del
+  proceso durante la operación puede dejar un código sin correo hasta caducar.
+- Un timeout puede ocurrir después de que Google haya enviado el correo. Se
+  elimina el código local y no se reintenta para evitar duplicados; ese correo
+  podría contener un código que ya no sea válido.
+- La plantilla y las cuotas pertenecen al Apps Script externo. No se cambió ni
+  desplegó ese script. Gmail y Outlook/Hotmail requieren verificación manual
+  con cuentas autorizadas; no se verificó la bandeja de entrada ni producción.

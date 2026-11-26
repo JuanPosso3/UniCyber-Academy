@@ -12,7 +12,7 @@ cómo regresar a esa pestaña e incluye un enlace a `/register`. La casilla
 conserva la validación obligatoria y añade el atributo `required`.
 
 La descripción se basa en los modelos, autorización, scrypt, infraestructura
-prevista Vercel/Render/Neon y envío de recuperación mediante Resend. No se
+prevista Vercel/Render/Neon y envío de recuperación mediante Google Apps Script. No se
 atribuye autorización institucional ni se certifica cumplimiento legal.
 Pendientes: responsable jurídico, contacto formal, conservación, procedimiento
 de solicitudes y condiciones de proveedores. La aceptación continúa siendo

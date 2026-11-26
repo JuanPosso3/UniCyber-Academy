@@ -6,8 +6,7 @@ import {
   verifyPassword,
 } from '../../infrastructure/security/password.js';
 import { consumeRateLimit } from '../../infrastructure/security/rate-limit.js';
-import { AppError } from '../../infrastructure/http/errors.js';
-import { Resend } from 'resend';
+import { sendRecoveryEmail } from '../../infrastructure/email/google-apps-script.js';
 
 const RECOVERY_CODE_BYTES = 4; // 8 caracteres hexadecimales
 const CODE_TTL_MS = 15 * 60 * 1000; // 15 minutos
@@ -15,29 +14,6 @@ const MAX_VERIFICATION_ATTEMPTS = 5;
 // Límite de solicitudes por correo para evitar abuso del envío de emails.
 const MAX_REQUESTS_PER_WINDOW = 3;
 const REQUEST_WINDOW_MS = 15 * 60 * 1000;
-// Remitente de pruebas de Resend; en producción debe configurarse un
-// dominio verificado mediante RESEND_FROM_EMAIL.
-const RESEND_FROM_EMAIL =
-  process.env['RESEND_FROM_EMAIL'] ?? 'onboarding@resend.dev';
-
-let resendClient: Resend | null = null;
-
-function getResendClient(): Resend {
-  if (!resendClient) {
-    const apiKey = process.env['RESEND_API_KEY'];
-    if (!apiKey) {
-      throw new AppError(
-        500,
-        'EMAIL_NOT_CONFIGURED',
-        'El servicio de correo no está configurado.',
-      );
-    }
-
-    resendClient = new Resend(apiKey);
-  }
-
-  return resendClient;
-}
 
 function generateRecoveryCode(): string {
   return randomBytes(RECOVERY_CODE_BYTES).toString('hex');
@@ -96,20 +72,36 @@ export async function requestRecoveryCode(
     return;
   }
 
-  await db.orm.public.PasswordReset
-    .where({ userId })
-    .where((reset) => reset.usedAt.isNull())
-    .deleteAll();
-
   const code = generateRecoveryCode();
   const codeHash = await hashPassword(code);
-  const expiresAt = new Date(Date.now() + CODE_TTL_MS).toISOString();
-
-  const created = await db.orm.public.PasswordReset.create({
-    userId,
-    codeHash,
-    expiresAt,
+  const created = await db.transaction(async (tx) => {
+    // Serializa únicamente la emisión por cuenta. No se mantiene el bloqueo
+    // durante el envío HTTP. Evita que una solicitud concurrente elimine o
+    // sustituya un código vigente entre la consulta anterior y la creación.
+    const lock = db.raw.sql`SELECT id FROM public."user" WHERE id = ${userId} FOR UPDATE`
+      .returnsRow({ id: 'pg/int4@1' }).build();
+    await tx.query(lock);
+    const currentUser = await tx.orm.public.User.first({ id: userId });
+    if (!currentUser || currentUser.status !== 'ACTIVE') return null;
+    const now = new Date().toISOString();
+    const active = await tx.orm.public.PasswordReset
+      .where({ userId })
+      .where((reset) => reset.usedAt.isNull())
+      .where((reset) => reset.expiresAt.gt(now))
+      .first();
+    if (active) return null;
+    await tx.orm.public.PasswordReset
+      .where({ userId })
+      .where((reset) => reset.usedAt.isNull())
+      .where((reset) => reset.expiresAt.lte(now))
+      .deleteAll();
+    return tx.orm.public.PasswordReset.create({
+      userId,
+      codeHash,
+      expiresAt: new Date(Date.now() + CODE_TTL_MS).toISOString(),
+    });
   });
+  if (!created) return;
 
   try {
     await sendRecoveryEmail(normalizedEmail, code);
@@ -126,49 +118,6 @@ export async function requestRecoveryCode(
       'No se pudo enviar el correo de recuperación de contraseña.',
     );
   }
-}
-
-async function sendRecoveryEmail(email: string, code: string): Promise<void> {
-  const resend = getResendClient();
-  const { error } = await resend.emails.send({
-    from: `UniCyber Academy <${RESEND_FROM_EMAIL}>`,
-    to: [email],
-    subject: 'Código de recuperación de contraseña — UniCyber Academy',
-    text: recoveryEmailText(code),
-    html: recoveryEmailHtml(code),
-  });
-
-  if (error) {
-    throw new Error('EMAIL_DELIVERY_FAILED');
-  }
-}
-
-function recoveryEmailText(code: string): string {
-  return `Hola,
-
-Has solicitado restablecer la contraseña de tu cuenta de UniCyber Academy.
-
-Tu código de recuperación es: ${code}
-
-Este código expira en 15 minutos y solo se puede usar una vez.
-
-Si no solicitaste este cambio, ignora este mensaje. Tu contraseña no se modificará a menos que ingreses el código en UniCyber Academy.
-
-— Equipo de UniCyber Academy`;
-}
-
-function recoveryEmailHtml(code: string): string {
-  return `
-    <div style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1e293b; max-width: 560px; margin: 0 auto; padding: 24px;">
-      <h2 style="color: #2563eb;">Restablecimiento de contraseña</h2>
-      <p>Has solicitado restablecer la contraseña de tu cuenta de UniCyber Academy.</p>
-      <p style="font-size: 24px; font-weight: bold; letter-spacing: 4px; text-align: center; background: #f1f5f9; padding: 16px; border-radius: 8px; color: #2563eb;">${code}</p>
-      <p>Este código expira en <strong>15 minutos</strong> y solo se puede usar <strong>una vez</strong>.</p>
-      <p style="color: #64748b;">Si no solicitaste este cambio, ignora este mensaje. Tu contraseña no se modificará a menos que ingreses el código en UniCyber Academy.</p>
-      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-      <p style="font-size: 12px; color: #64748b;">— Equipo de UniCyber Academy</p>
-    </div>
-  `;
 }
 
 /**

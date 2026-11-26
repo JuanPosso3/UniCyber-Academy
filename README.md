@@ -134,8 +134,8 @@ Backend (`backend/.env`, basado en `backend/.env.example`):
 - `DATABASE_URL`
 - `JWT_SECRET`
 - `JWT_EXPIRES_IN`
-- `RESEND_API_KEY` (recuperación de contraseña)
-- `RESEND_FROM_EMAIL` (opcional; remitente verificado)
+- `MAIL_API_URL` (URL HTTPS del Apps Script existente para recuperación; solo backend)
+- `MAIL_API_SECRET` (secreto compartido de correo; solo backend, nunca registrarlo)
 - `COOKIE_SECURE` (opcional)
 
 Frontend (`frontend/.env`, basado en `frontend/.env.example`):

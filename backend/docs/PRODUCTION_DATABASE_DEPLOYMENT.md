@@ -23,8 +23,8 @@ Navegador
 | `DATABASE_URL` | Sí | Conexión directa de Neon con `sslmode=verify-full`. |
 | `JWT_SECRET` | Sí | Secreto aleatorio de al menos 32 caracteres. |
 | `JWT_EXPIRES_IN` | Sí | Por ejemplo `2h`. |
-| `RESEND_API_KEY` | Sí para recuperación | Clave de Resend. |
-| `RESEND_FROM_EMAIL` | Recomendada | Remitente verificado. |
+| `MAIL_API_URL` | Sí para recuperación | URL HTTPS del Apps Script existente; solo backend. |
+| `MAIL_API_SECRET` | Sí para recuperación | Secreto compartido con Apps Script; solo backend. |
 | `NODE_ENV` | Sí | `production`. |
 | `COOKIE_SECURE` | Opcional | `true`; en producción ya se activa por `NODE_ENV`. |
 | `PORT` | La define Render | No hardcodear. |
@@ -68,8 +68,12 @@ proyecto y rama. Si no coincide, actualizarla.
 
 ### 2. Confirmar las demás variables
 
-Comprobar `JWT_SECRET`, `JWT_EXPIRES_IN`, `RESEND_API_KEY`,
-`RESEND_FROM_EMAIL` y `NODE_ENV=production`.
+Comprobar presencia de `JWT_SECRET`, `JWT_EXPIRES_IN`, `MAIL_API_URL`,
+`MAIL_API_SECRET` y `NODE_ENV=production`, sin imprimir valores. El usuario
+informó que las variables de correo ya están en Render; esta migración no
+verificó el panel ni el servicio remoto. Véase
+`GOOGLE_APPS_SCRIPT_EMAIL_INTEGRATION.md` para verificación segura y pruebas
+manuales pendientes. No se requiere cambiar el esquema de Neon.
 
 ### 3. Configurar la migración previa al despliegue
 

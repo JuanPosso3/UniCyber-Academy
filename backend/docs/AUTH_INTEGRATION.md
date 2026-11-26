@@ -6,6 +6,17 @@ documentación histórica del backend (`docs/BACKEND_DOCUMENTATION.md`, apéndic
 
 ## Alcance
 
+### Actualización de recuperación (26 de noviembre de 2026)
+
+La recuperación existente conserva sus endpoints, validaciones, respuestas
+genéricas, hash scrypt, límites y consumo transaccional. El transporte de correo
+utiliza ahora el Apps Script desplegado, mediante `MAIL_API_URL` y
+`MAIL_API_SECRET` exclusivos del backend. No requiere Resend ni SMTP. Véanse
+`PASSWORD_RECOVERY.md` y `GOOGLE_APPS_SCRIPT_EMAIL_INTEGRATION.md` para el
+contrato HTTPS, limpieza ante fallos, pruebas y verificaciones externas pendientes.
+Las limitaciones históricas al final describen la implementación original,
+no la cobertura actual de recuperación y autorización.
+
 Se implementó únicamente registro e inicio de sesión con JWT, más el
 subconjunto de frontend necesario para usarlos. No se modificó el contrato de
 Prisma, el modelo `User` ni las rutas de salud existentes.

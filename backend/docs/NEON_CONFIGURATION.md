@@ -201,8 +201,8 @@ usuarios y `user_id_seq = 368`.
 | `DATABASE_URL` | Sí | Cadena directa de Neon con `sslmode=verify-full`. |
 | `JWT_SECRET` | Sí | Secreto de firma de al menos 32 caracteres. |
 | `JWT_EXPIRES_IN` | Sí | Duración de sesión, por ejemplo `2h`. |
-| `RESEND_API_KEY` | Sí para recuperación | Clave de Resend. |
-| `RESEND_FROM_EMAIL` | Recomendada | Remitente verificado en producción. |
+| `MAIL_API_URL` | Sí para recuperación | URL HTTPS del Apps Script, exclusivamente en el backend de Render. |
+| `MAIL_API_SECRET` | Sí para recuperación | Secreto compartido, exclusivamente en el backend de Render. |
 | `NODE_ENV` | Sí | `production`. |
 | `COOKIE_SECURE` | Opcional | `true` fuerza cookies seguras; en producción ya se activa por `NODE_ENV`. |
 

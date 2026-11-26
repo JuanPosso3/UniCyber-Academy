@@ -10,7 +10,7 @@ La migración PostgreSQL → Neon pertenece a una intervención anterior. Sus ar
 
 ## Arquitectura y límites de confianza
 
-Navegador React → `/api` del mismo origen en Vercel → rewrite hacia Render → Express 5 → Prisma ORM 8 → PostgreSQL. En desarrollo, Vite proxifica `/api`. Resend envía los códigos de recuperación desde el backend.
+Navegador React → `/api` del mismo origen en Vercel → rewrite hacia Render → Express 5 → Prisma ORM 8 → PostgreSQL. En desarrollo, Vite proxifica `/api`. Desde la actualización del 26 de noviembre de 2026, el backend envía los códigos de recuperación por HTTPS al Apps Script existente. Véase `backend/docs/GOOGLE_APPS_SCRIPT_EMAIL_INTEGRATION.md` para la verificación actual y sus límites.
 
 | Superficie | Acceso y control verificado |
 |---|---|

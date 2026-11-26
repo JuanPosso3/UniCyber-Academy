@@ -21,7 +21,7 @@ Estado: acciones manuales pendientes de verificación por el responsable. Ningun
 
 ## Render
 
-- [ ] Confirmar `NODE_ENV=production`, cookie `Secure`, `JWT_EXPIRES_IN=2h` y `RESEND_FROM_EMAIL` verificado.
+- [ ] Confirmar `NODE_ENV=production`, cookie `Secure`, `JWT_EXPIRES_IN=2h` y presencia de `MAIL_API_URL`/`MAIL_API_SECRET` solo en el backend. Verificar Apps Script y recepción real con cuentas autorizadas sin registrar secretos.
 - [ ] Revisar la entropía de `JWT_SECRET` sin imprimirlo; cualquier rotación requiere autorización e invalida sesiones.
 - [ ] Verificar número real de instancias, par inmediato y tratamiento de `X-Forwarded-For`; solo entonces completar `TRUSTED_PROXY_CIDRS`. No fijar `trust proxy = 1` sin evidencia.
 - [ ] Repetir pruebas CSRF en el dominio real: origen confiable, origen externo, `Origin: null`, Referer ausente, subdominio same-site y logout sin body.
