@@ -23,7 +23,7 @@ interface AuthContextValue {
   isBootstrapping: boolean;
   isSubmitting: boolean;
   sessionNotice: SessionNotice | null;
-  login: (email: string, password: string) => Promise<AuthUser>;
+  login: (email: string, password: string, recaptchaToken: string) => Promise<AuthUser>;
   logout: (notice?: string) => Promise<void>;
 }
 
@@ -92,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (
     email: string,
     password: string,
+    recaptchaToken: string,
   ): Promise<AuthUser> => {
     setIsSubmitting(true);
 
@@ -99,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { user: authenticatedUser } = await loginRequest({
         email,
         password,
+        recaptchaToken,
       });
 
       setUser(authenticatedUser);

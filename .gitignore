@@ -61,6 +61,7 @@ frontendGuide/
 !frontend/docs/
 frontend/docs/*
 !frontend/docs/LOGIN_UI_IMPROVEMENTS.md
+!frontend/docs/RECAPTCHA_LOGIN_INTEGRATION.md
 !frontend/docs/COURSE_PROGRESS_STATUS.md
 !frontend/docs/ARCHIVED_CONTENT_REACTIVATION.md
 !frontend/docs/REGISTRATION_PASSWORD_VALIDATION.md

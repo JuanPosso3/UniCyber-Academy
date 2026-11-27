@@ -134,6 +134,8 @@ Backend (`backend/.env`, basado en `backend/.env.example`):
 - `DATABASE_URL`
 - `JWT_SECRET`
 - `JWT_EXPIRES_IN`
+- `RECAPTCHA_SECRET_KEY` (privada; obligatoria para verificar CAPTCHA del login)
+- `FRONTEND_URL` (URL del frontend autorizado para el hostname de CAPTCHA)
 - `MAIL_API_URL` (URL HTTPS del Apps Script existente para recuperación; solo backend)
 - `MAIL_API_SECRET` (secreto compartido de correo; solo backend, nunca registrarlo)
 - `COOKIE_SECURE` (opcional)
@@ -141,6 +143,11 @@ Backend (`backend/.env`, basado en `backend/.env.example`):
 Frontend (`frontend/.env`, basado en `frontend/.env.example`):
 
 - `VITE_API_BASE_URL` (opcional; por defecto `/api`)
+- `VITE_RECAPTCHA_SITE_KEY` (pública; reCAPTCHA v2 Checkbox del login)
+
+`VITE_API_URL` puede existir en el despliegue; el cliente conserva la variable
+`VITE_API_BASE_URL` o el proxy `/api`, no la sustituye automáticamente. Véanse
+`backend/docs/RECAPTCHA_SECURITY.md` y `frontend/docs/RECAPTCHA_LOGIN_INTEGRATION.md`.
 
 Los secretos del backend no deben declararse en el frontend. `.env` está
 excluido por `.gitignore`.

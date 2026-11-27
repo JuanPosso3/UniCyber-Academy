@@ -7,6 +7,8 @@ la ilustración grande. Se reutilizan los colores, tipografía, Input, Alert y
 Button existentes. Los adornos no se anuncian al lector de pantalla; las
 etiquetas, foco y mensajes del formulario se conservan.
 
-No se modificaron el envío de login, validaciones, contexto, cookies, JWT ni
-la navegación de recuperación y registro. Resultados de verificación en
-`IMPLEMENTATION_VALIDATION.md`.
+El cambio visual original no alteró autenticación. Posteriormente se añadió
+reCAPTCHA v2 obligatorio al envío y su verificación en el backend; véase
+`RECAPTCHA_LOGIN_INTEGRATION.md`. Se conservan cookies, JWT, sesión, diseño y
+navegación de recuperación/registro. Resultados históricos del cambio visual
+en `IMPLEMENTATION_VALIDATION.md`; pruebas de CAPTCHA en su documento específico.

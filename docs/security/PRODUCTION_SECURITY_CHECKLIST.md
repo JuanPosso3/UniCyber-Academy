@@ -19,7 +19,22 @@ Estado: acciones manuales pendientes de verificación por el responsable. Ningun
 - [ ] Verificar Google Fonts y estilos de progreso bajo la CSP sin habilitar scripts en línea.
 - [ ] Confirmar que no hay secretos en variables `VITE_*` ni en artefactos públicos.
 
-## Render
+## Google reCAPTCHA v2 del login
+
+- [ ] Confirmar que las claves pertenecen al mismo **reCAPTCHA v2 Checkbox**, no v3 ni invisible.
+- [ ] Verificar `VITE_RECAPTCHA_SITE_KEY` pública en Vercel y reconstruir el frontend.
+- [ ] Verificar presencia de `RECAPTCHA_SECRET_KEY` privada y `FRONTEND_URL` en Render, sin imprimir valores.
+- [ ] Registrar en Google el hostname exacto del frontend; no asumir autorización de previews de Vercel.
+- [ ] Comprobar CSP de Vercel/Express: carga del script, iframe y reto en español, sin comodines ni errores de bloqueo.
+- [ ] Resolver un reto real con una cuenta de prueba autorizada y comprobar POST con `recaptchaToken`, sin publicar su contenido.
+- [ ] Confirmar acceso de Render al endpoint oficial `siteverify` y rechazo seguro ante timeout o configuración ausente.
+- [ ] Comprobar rechazo de petición directa sin token, token inválido/caducado/usado y hostname no autorizado, sin cookie de sesión.
+- [ ] Verificar contraseña incorrecta y login correcto tras CAPTCHA válido, cookie HttpOnly/Secure, `/auth/me` y logout.
+- [ ] Mantener proxy `/api` del mismo origen y allowlist CSRF exacta (`APP_ORIGINS`). No habilitar CORS `*` ni cambiar SameSite para este control.
+- [ ] Verificar móvil, teclado y lector de pantalla; confirmar que no aparecen secretos ni tokens en logs/artefactos.
+- [ ] Registrar evidencia real. Las pruebas automatizadas usan mocks y no verifican Google, Vercel o Render de producción.
+
+## Configuración de Render
 
 - [ ] Confirmar `NODE_ENV=production`, cookie `Secure`, `JWT_EXPIRES_IN=2h` y presencia de `MAIL_API_URL`/`MAIL_API_SECRET` solo en el backend. Verificar Apps Script y recepción real con cuentas autorizadas sin registrar secretos.
 - [ ] Revisar la entropía de `JWT_SECRET` sin imprimirlo; cualquier rotación requiere autorización e invalida sesiones.

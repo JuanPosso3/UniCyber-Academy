@@ -23,6 +23,8 @@ Navegador
 | `DATABASE_URL` | Sí | Conexión directa de Neon con `sslmode=verify-full`. |
 | `JWT_SECRET` | Sí | Secreto aleatorio de al menos 32 caracteres. |
 | `JWT_EXPIRES_IN` | Sí | Por ejemplo `2h`. |
+| `RECAPTCHA_SECRET_KEY` | Sí para login | Clave privada reCAPTCHA v2; exclusivamente backend. |
+| `FRONTEND_URL` | Sí para login | URL HTTPS del frontend cuyo hostname verifica Google. |
 | `MAIL_API_URL` | Sí para recuperación | URL HTTPS del Apps Script existente; solo backend. |
 | `MAIL_API_SECRET` | Sí para recuperación | Secreto compartido con Apps Script; solo backend. |
 | `NODE_ENV` | Sí | `production`. |
@@ -35,7 +37,14 @@ No se deben subir estas variables al repositorio.
 
 Mantener la configuración existente que ya funciona. Si el frontend usa
 `VITE_API_BASE_URL`, debe apuntar al backend de Render o a la ruta proxificada
-que ya esté en uso. No se cambió ningún endpoint ni contrato de la API.
+que ya esté en uso. Se conservan los endpoints; el cuerpo de login se amplía
+únicamente con el token descrito a continuación.
+
+Actualización del login: el cuerpo exige ahora `recaptchaToken`; configurar
+`VITE_RECAPTCHA_SITE_KEY` pública en Vercel. El cliente conserva
+`VITE_API_BASE_URL` o `/api`; la variable de despliegue `VITE_API_URL` no sustituye
+automáticamente ese transporte. Véase `RECAPTCHA_SECURITY.md` y la lista de
+seguridad de producción para claves, dominio autorizado y verificación externa.
 
 ## Preparación inicial ya realizada
 

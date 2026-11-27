@@ -6,6 +6,14 @@ documentación histórica del backend (`docs/BACKEND_DOCUMENTATION.md`, apéndic
 
 ## Alcance
 
+### Actualización de login con reCAPTCHA v2 (26 de noviembre de 2026)
+
+El login requiere ahora `recaptchaToken`. El backend valida con Google su
+aceptación y hostname de `FRONTEND_URL` antes de llamar al servicio existente de
+credenciales, sin modificar JWT ni cookies. Requiere `RECAPTCHA_SECRET_KEY`
+privada solo en Render. Los fallos de configuración/red nunca permiten continuar.
+Detalles, pruebas y verificación externa pendiente en `RECAPTCHA_SECURITY.md`.
+
 ### Actualización de recuperación (26 de noviembre de 2026)
 
 La recuperación existente conserva sus endpoints, validaciones, respuestas
@@ -28,7 +36,7 @@ Base: `/api/auth`.
 | Método | Ruta | Cuerpo | Éxito | Errores |
 |---|---|---|---|---|
 | `POST` | `/register` | `{ firstName, lastName, email, password }` | `201 { "user": { id, firstName, lastName, email, role, status } }` | `400` validación, `409` correo ya registrado |
-| `POST` | `/login` | `{ email, password }` | `200 { "user": ... }` y cookie `unicyber_session` | `400` validación, `401` credenciales inválidas, `403` cuenta deshabilitada |
+| `POST` | `/login` | `{ email, password, recaptchaToken }` | `200 { "user": ... }` y cookie `unicyber_session` | `400` validación, `401` credenciales inválidas, `403` CAPTCHA/cuenta, `503` verificación no disponible |
 | `GET` | `/me` | — (cookie) | `200 { "user": ... }` | `401` sin sesión o token inválido/expirado |
 | `POST` | `/logout` | — (cookie) | `204` sin cuerpo y cookie expirada | `401` solo si se quiere exigir sesión; actualmente es público |
 
@@ -72,6 +80,8 @@ Todos los mensajes al usuario están en español.
 | `JWT_SECRET` | Sí | Secreto de al menos 32 caracteres; preferible 48–64 bytes aleatorios |
 | `JWT_EXPIRES_IN` | No | `2h` por defecto; admite `3600`, `30m`, `2h`, `7d` |
 | `COOKIE_SECURE` | No | `true` para forzar cookie `Secure`; `production` ya la activa |
+| `RECAPTCHA_SECRET_KEY` | Sí para login | Clave privada de reCAPTCHA v2; nunca en el frontend. |
+| `FRONTEND_URL` | Sí para login | URL autorizada para comparar exactamente el hostname del CAPTCHA. |
 
 `.env` está excluido por `.gitignore`. `.env.example` documenta las variables y
 cómo generar el secreto.

@@ -17,6 +17,7 @@ import {
 } from './auth.service.js';
 import { validateLogin, validateRegister } from './auth.validation.js';
 import type { FieldErrors } from './auth.validation.js';
+import { verifyRecaptcha } from '../../infrastructure/security/recaptcha.js';
 
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS_PER_EMAIL = 10;
@@ -71,7 +72,8 @@ export async function register(
   res.status(201).json({ user });
 }
 
-export async function login(
+async function performLogin(
+  authenticate: typeof loginUser,
   req: Request,
   res: Response,
 ): Promise<void> {
@@ -106,7 +108,8 @@ export async function login(
     LOGIN_WINDOW_MS,
   );
 
-  const user = await loginUser(result.data);
+  await verifyRecaptcha(result.data.recaptchaToken);
+  const user = await authenticate({ email: result.data.email, password: result.data.password });
   const token = await signAccessToken({
     id: user.id,
     role: user.role,
@@ -119,6 +122,12 @@ export async function login(
 
   res.status(200).json({ user: toPublicUser(user) });
 }
+
+export function createLoginHandler(authenticate: typeof loginUser = loginUser) {
+  return (req: Request, res: Response): Promise<void> => performLogin(authenticate, req, res);
+}
+
+export const login = createLoginHandler();
 
 export function me(req: Request, res: Response): void {
   const { authUser } = req as AuthenticatedRequest;

@@ -6,6 +6,7 @@
  */
 
 import { hasPasswordComplexity, PASSWORD_REQUIREMENTS } from '../../domain/password-policy.js';
+import { isRecaptchaToken, CAPTCHA_REQUIRED_MESSAGE } from '../../infrastructure/security/recaptcha.js';
 
 export interface RegisterInput {
   firstName: string;
@@ -17,6 +18,10 @@ export interface RegisterInput {
 export interface LoginInput {
   email: string;
   password: string;
+}
+
+export interface LoginRequestInput extends LoginInput {
+  recaptchaToken: string;
 }
 
 export type FieldErrors = Record<string, string>;
@@ -101,10 +106,11 @@ export function validateRegister(
   };
 }
 
-export function validateLogin(body: unknown): ValidationResult<LoginInput> {
+export function validateLogin(body: unknown): ValidationResult<LoginRequestInput> {
   const raw = asRecord(body);
   const email = readString(raw, 'email').trim().toLowerCase();
   const password = readString(raw, 'password');
+  const recaptchaToken = readString(raw, 'recaptchaToken');
   const errors: FieldErrors = {};
 
   if (!email) {
@@ -120,12 +126,16 @@ export function validateLogin(body: unknown): ValidationResult<LoginInput> {
     errors['password'] = 'Este campo es obligatorio.';
   }
 
+  if (!isRecaptchaToken(recaptchaToken)) {
+    errors['recaptchaToken'] = CAPTCHA_REQUIRED_MESSAGE;
+  }
+
   if (Object.keys(errors).length > 0) {
     return { ok: false, errors };
   }
 
   return {
     ok: true,
-    data: { email, password },
+    data: { email, password, recaptchaToken },
   };
 }

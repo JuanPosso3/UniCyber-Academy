@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import './helpers/recaptcha.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { AddressInfo } from 'node:net';
@@ -65,7 +66,7 @@ test('autenticación, autorización, propiedad, revocación y recuperación en b
     });
   }
   async function login(value = password) {
-    return request('/auth/login', 'POST', { email, password: value });
+    return request('/auth/login', 'POST', { email, password: value, recaptchaToken: 'test-recaptcha-token' });
   }
   try {
     for (const weak of ['Ab1!', 'minuscula1!', 'MAYUSCULA1!', 'SinNumeros!', 'SinSimbolos1']) {
@@ -83,7 +84,7 @@ test('autenticación, autorización, propiedad, revocación y recuperación en b
     assert.equal(created.user.role, 'STUDENT');
     assert.equal(created.user.passwordHash, undefined);
     assert.equal((await login('Incorrecta123')).status, 401);
-    assert.equal((await request('/auth/login', 'POST', { email: `ausente-${email}`, password })).status, 401);
+    assert.equal((await request('/auth/login', 'POST', { email: `ausente-${email}`, password, recaptchaToken: 'test-recaptcha-token' })).status, 401);
     assert.equal((await request('/auth/me')).status, 401);
     assert.equal((await request('/auth/me', 'GET', undefined, `${env.cookieName}=alterado`)).status, 401);
     const authenticated = await login();

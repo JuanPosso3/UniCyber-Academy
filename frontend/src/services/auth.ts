@@ -4,6 +4,7 @@ import type { AuthResponse } from "../types/auth";
 export interface LoginPayload {
   email: string;
   password: string;
+  recaptchaToken: string;
 }
 
 export interface RegisterPayload {

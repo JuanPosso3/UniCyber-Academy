@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import './helpers/recaptcha.js';
 import test from 'node:test';
 import type { AddressInfo } from 'node:net';
 import { createApp } from '../src/app.js';
@@ -28,8 +29,8 @@ test('registration HTTP rejects weak passwords and preserves login and hashing',
     assert.ok(user);
     assert.equal(user.role, 'STUDENT');
     assert.ok(await verifyPassword(password, user.passwordHash));
-    assert.equal((await request('login', { email, password: 'incorrecta' })).status, 401);
-    const login = await request('login', { email, password });
+    assert.equal((await request('login', { email, password: 'incorrecta', recaptchaToken: 'test-recaptcha-token' })).status, 401);
+    const login = await request('login', { email, password, recaptchaToken: 'test-recaptcha-token' });
     assert.equal(login.status, 200);
     assert.ok(login.headers.get('set-cookie'));
   } finally {

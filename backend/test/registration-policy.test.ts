@@ -14,7 +14,7 @@ test('registration policy rejects each missing requirement on client and server'
     assert.equal(clientPolicy(password), expected);
     assert.equal(validateRegister({ firstName: 'Ana', lastName: 'Pérez', email: 'ana@example.test', password }).ok, expected);
   }
-  assert.equal(validateLogin({ email: 'ana@example.test', password: 'antigua' }).ok, true);
+  assert.equal(validateLogin({ email: 'ana@example.test', password: 'antigua', recaptchaToken: 'test-recaptcha-token' }).ok, true);
 });
 
 test('valid registration password retains salted hashing', async () => {

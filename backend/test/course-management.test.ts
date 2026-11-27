@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import './helpers/recaptcha.js';
 import test from 'node:test';
 import type { AddressInfo } from 'node:net';
 import { createApp } from '../src/app.js';
@@ -89,7 +90,7 @@ async function login(email: string): Promise<string> {
   const response = await fetch(`${baseUrl}/auth/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-unicyber-request': '1' },
-    body: JSON.stringify({ email, password: TEST_PASSWORD }),
+    body: JSON.stringify({ email, password: TEST_PASSWORD, recaptchaToken: 'test-recaptcha-token' }),
   });
 
   assert.equal(response.status, 200);

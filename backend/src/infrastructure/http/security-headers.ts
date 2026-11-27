@@ -6,7 +6,8 @@ import { env } from '../../config/env.js';
  *
  * La CSP permite las hojas de Google Fonts que ya usa el frontend y los
  * estilos en línea de React (por ejemplo, barras de progreso). No permite
- * scripts en línea ni orígenes de API distintos del propio.
+ * scripts en línea. Añade únicamente los destinos específicos de Google
+ * necesarios para el widget reCAPTCHA; la API conserva el mismo origen.
  */
 
 function buildContentSecurityPolicy(): string {
@@ -16,11 +17,12 @@ function buildContentSecurityPolicy(): string {
     "object-src 'none'",
     "frame-ancestors 'none'",
     "form-action 'self'",
-    "script-src 'self'",
+    "script-src 'self' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
+    "frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data:",
-    "connect-src 'self'",
+    "connect-src 'self' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
     "manifest-src 'self'",
     "worker-src 'self'",
   ];
